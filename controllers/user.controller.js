@@ -5,28 +5,30 @@ const UserModel = require("../model/user.model");
 
 const registerUser = async (req, res) => {
   try {
-    const { name, phone, password } = req.body;
-    if (!name || !phone || !password) {
+    const { fullName, email, phone, password } = req.body;
+    if (!fullName || !email  || !phone || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const existingUser = await UserModel.findOne({ phone });
+    const existingUser = await UserModel.findOne({ $or: [{ email }, { phone }]});
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new UserModel({ name, phone, password: hashedPassword });
+    const user = new UserModel({ fullName ,email, phone, password: hashedPassword });
     await user.save();
 
     res.status(201).json({
       message: "User registered successfully",
-      user: { id: user._id, name: user.name, phone: user.phone },
+      user: { id: user._id,  fullName: user.fullName, email: user.email, phone: user.phone },
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
+
 
 const loginUser = async (req, res) => {
   try {
