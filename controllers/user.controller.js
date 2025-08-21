@@ -5,8 +5,8 @@ const UserModel = require("../model/user.model");
 
 const registerUser = async (req, res) => {
   try {
-    const { fullName, email, phone, password } = req.body;
-    if (!fullName || !email  || !phone || !password) {
+    const { fullname, email, phone, password } = req.body;
+    if (!fullname || !email  || !phone || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -16,12 +16,12 @@ const registerUser = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new UserModel({ fullName ,email, phone, password: hashedPassword });
+    const user = new UserModel({ fullname ,email, phone, password: hashedPassword });
     await user.save();
 
     res.status(201).json({
       message: "User registered successfully",
-      user: { id: user._id,  fullName: user.fullName, email: user.email, phone: user.phone },
+      user: { id: user._id,  fullname: user.fullname, email: user.email, phone: user.phone },
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
