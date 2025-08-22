@@ -12,10 +12,10 @@ app.use(express.urlencoded({ extended: true }));
 
 
 const userRoutes = require('./routes/user.routes');
-
+const propertyRoutes = require('./routes/properties.routes');
 
 app.use('/api/user', userRoutes);
-
+app.use('/api/property', propertyRoutes);
 
 
 app.listen(PORT, () => {
