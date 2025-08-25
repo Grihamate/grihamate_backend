@@ -98,6 +98,7 @@ const getAllProperties = async (req, res) => {
 
     res.status(200).json({
       success: true,
+      message: "Properties fetched successfully",
       properties
     });
   } catch (error) {
