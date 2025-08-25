@@ -82,6 +82,7 @@ const addProperty = async (req, res) => {
 };
 
 
+<<<<<<< Updated upstream
 const getAllProperties = async (req, res) => {
   try {
     const properties = await PropertyModel.find({}, {
@@ -102,10 +103,23 @@ const getAllProperties = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
+=======
+const getNumberOfProperties = async (req, res) => {
+  try {
+    const number = "7011769523"
+    res.status(200).json({
+      success: true,
+      message: "Number of properties retrieved successfully",
+      number
+    });
+  } catch (error) {
+    console.error("❌ Error in getNumberOfProperties:", error);
+>>>>>>> Stashed changes
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
+<<<<<<< Updated upstream
 
 const getProperty = async (req, res) => {
   try {
@@ -127,3 +141,6 @@ const getProperty = async (req, res) => {
 
 
 module.exports = { upload, addProperty,getAllProperties,getProperty};
+=======
+module.exports = { upload, addProperty, getNumberOfProperties };
+>>>>>>> Stashed changes
