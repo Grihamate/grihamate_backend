@@ -4,6 +4,9 @@ const propertiesController = require("../controllers/properties.controller");
 
 const router = express.Router();
 
-router.post("/add", propertiesController.upload.array("images", 10), propertiesController.addProperty);
+router.post("/add", propertiesController.upload.array("images", 10), propertiesController.
+addProperty);
+router.get("/:id", propertiesController.getProperty);
+router.get("/all", propertiesController.getAllProperties);
 
 module.exports = router;

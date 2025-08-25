@@ -81,4 +81,49 @@ const addProperty = async (req, res) => {
   }
 };
 
-module.exports = { upload, addProperty };
+
+const getAllProperties = async (req, res) => {
+  try {
+    const properties = await PropertyModel.find({}, {
+      images: 1,                           
+      "basicDetails.bhkType": 1,
+      "location.locality": 1,
+      "location.city": 1,
+      description: 1,
+      "basicDetails.monthlyRent": 1,
+      "basicDetails.title": 1,
+      "basicDetails.bathrooms": 1,
+      "basicDetails.area": 1
+    });
+
+    res.status(200).json({
+      success: true,
+      properties
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+const getProperty = async (req, res) => {
+  try {
+    const {id} =req.params;
+    const property = await PropertyModel.findById(id);
+    if (!property) {
+      return res.status(404).json({ success: false, message: "Property not found" });
+    }
+    res.status(200).json({
+      success: true,
+      property
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+module.exports = { upload, addProperty,getAllProperties,getProperty};
