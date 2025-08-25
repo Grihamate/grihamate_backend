@@ -95,7 +95,27 @@ const deleteUser = async (req, res) => {
   }
 };
 
+
+const getUserProfile=async(req,res)=>{
+
+  try {
+    const userId = req.userId;
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({
+      message: "User profile retrieved successfully",
+      user: { id: user._id, name: user.name, phone: user.phone },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 module.exports = {
+  getUserProfile,
   registerUser,
   loginUser,
   updateUser,
