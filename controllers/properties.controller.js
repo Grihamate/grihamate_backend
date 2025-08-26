@@ -82,24 +82,40 @@ const addProperty = async (req, res) => {
 };
 
 
+// const getAllProperties = async (req, res) => {
+//   try {
+//     const properties = await PropertyModel.find({}, {
+//       images: 1,                           
+//       "basicDetails.bhkType": 1,
+//       "location.locality": 1,
+//       "location.city": 1,
+//       description: 1,
+//       "basicDetails.monthlyRent": 1,
+//       "basicDetails.title": 1,
+//       "basicDetails.bathrooms": 1,
+//       "basicDetails.area": 1
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Properties fetched successfully",
+//       properties
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
+
 const getAllProperties = async (req, res) => {
   try {
-    const properties = await PropertyModel.find({}, {
-      images: 1,                           
-      "basicDetails.bhkType": 1,
-      "location.locality": 1,
-      "location.city": 1,
-      description: 1,
-      "basicDetails.monthlyRent": 1,
-      "basicDetails.title": 1,
-      "basicDetails.bathrooms": 1,
-      "basicDetails.area": 1
-    });
+    const allProperties = await PropertyModel.find(); 
 
     res.status(200).json({
       success: true,
       message: "Properties fetched successfully",
-      properties
+      allProperties
     });
   } catch (error) {
     console.error(error);
@@ -108,7 +124,8 @@ const getAllProperties = async (req, res) => {
 };
 
 
-const getProperty = async (req, res) => {
+
+const getPropertyById = async (req, res) => {
   try {
     const {id} =req.params;
     const property = await PropertyModel.findById(id);
@@ -139,4 +156,4 @@ const getNumberOfProperties = async (req, res) => {
   }
 };
 
-module.exports = { upload, addProperty,getAllProperties,getProperty,getNumberOfProperties };
+module.exports = { upload, addProperty,getAllProperties,getPropertyById,getNumberOfProperties };
