@@ -75,7 +75,7 @@ const updateUser = async (req, res) => {
     }
     res.status(200).json({
       message: "User updated successfully",
-      user: { id: updatedUser._id, name: updatedUser.name, phone: updatedUser.phone },
+      user: { id: updatedUser._id, fullname: updatedUser.fullname, phone: updatedUser.phone },
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -106,7 +106,7 @@ const getUserProfile=async(req,res)=>{
     }
     res.status(200).json({
       message: "User profile retrieved successfully",
-      user: { id: user._id, name: user.name, phone: user.phone },
+      user: { id: user._id, fullname: user.fullname, phone: user.phone },
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
