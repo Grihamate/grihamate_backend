@@ -147,6 +147,7 @@ const getNumberOfProperties = async (req, res) => {
   try {
     const number ="7011769523"
     res.status(200).json({
+      message: "Number of properties fetched successfully",
       success: true,
       number
     });
