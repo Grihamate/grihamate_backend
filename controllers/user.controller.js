@@ -2,6 +2,8 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const UserModel = require("../model/user.model");
+const nodemailer = require("nodemailer");
+
 
 const registerUser = async (req, res) => {
   try {
@@ -114,10 +116,51 @@ const getUserProfile=async(req,res)=>{
 };
 
 
+const getInTouch = async (req, res) => {
+  const { fullname, email, phone, message } = req.body;
+
+  if (!fullname || !email || !phone || !message) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_COMPANY,  
+      pass: process.env.GMAIL_PASS   
+    }
+  });
+
+  const mailOptions = {
+    from: email,  
+    to: process.env.GMAIL_COMPANY,    
+    replyTo: email,                
+    subject: 'New Get In Touch Form Submission',
+    text: `
+      Name: ${fullname}
+      Email: ${email}
+      Phone: ${phone}
+      Message: ${message}
+    `
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ message: "Your message has been sent successfully." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to send message." });
+  }
+};
+
+
+
+
 module.exports = {
   getUserProfile,
   registerUser,
   loginUser,
   updateUser,
   deleteUser,
+  getInTouch
 };

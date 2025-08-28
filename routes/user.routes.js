@@ -10,6 +10,8 @@ router.post('/login', authController.loginUser);
 router.get('/profile', authMiddleware, authController.getUserProfile);
 router.put('/update/:id', authMiddleware, authController.updateUser);
 router.delete('/delete/:id', authMiddleware, authController.deleteUser);
+router.post('/getintouch', authController.getInTouch);
+
 
 
 module.exports=router;
