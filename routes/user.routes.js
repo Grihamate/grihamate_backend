@@ -11,6 +11,10 @@ router.get('/profile', authMiddleware, authController.getUserProfile);
 router.put('/update/:id', authMiddleware, authController.updateUser);
 router.delete('/delete/:id', authMiddleware, authController.deleteUser);
 router.post('/getintouch', authController.getInTouch);
+router.post('/forgotpassword', authController.forgotPassword);
+router.put('/resetpassword', authController.resetPassword);
+
+
 
 
 

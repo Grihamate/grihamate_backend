@@ -155,6 +155,87 @@ const getInTouch = async (req, res) => {
 
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+  
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "10m",
+    });
+
+    
+    const resetLink = `http://localhost:5000/resetpassword/${token}`;
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_COMPANY,
+        pass: process.env.GMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.GMAIL_COMPANY,
+      to: email,
+      subject: "Password Reset Request",
+      text: `Click the following link to reset your password: ${resetLink}`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({ message: "Reset link sent to your email." });
+  } catch (error) {
+    res.status(500).json({ message: "Error sending reset link." });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: "Authorization token missing or invalid" });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const { newpassword, confirmpassword } = req.body;
+
+    if (!newpassword || !confirmpassword) {
+      return res.status(400).json({ message: "Both new password and confirm password are required." });
+    }
+
+    if (newpassword !== confirmpassword) {
+      return res.status(400).json({ message: "New password and confirm password do not match." });
+    }
+
+    const hashedPassword = await bcrypt.hash(newpassword, 10);
+
+    await UserModel.findByIdAndUpdate(decoded.id, { password: hashedPassword });
+
+    return res.status(200).json({ message: "Password has been reset successfully." });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(400).json({ message: "Invalid or expired token." });
+  }
+};
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+
+
 
 module.exports = {
   getUserProfile,
@@ -162,5 +243,8 @@ module.exports = {
   loginUser,
   updateUser,
   deleteUser,
-  getInTouch
+  getInTouch,
+  forgotPassword,
+  resetPassword
+
 };
