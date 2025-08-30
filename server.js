@@ -29,6 +29,11 @@ app.use('/api/user', userRoutes);
 app.use('/api/property', propertyRoutes);
 
 
+app.get("/", (req, res) => {
+  res.send("Server is reachable");
+});
+
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
