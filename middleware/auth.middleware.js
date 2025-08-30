@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const Blacklist = require("../model/blackList.model"); // import your blacklist model
 
 const authMiddleware = async (req, res, next) => {
   try {
@@ -10,13 +11,23 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
+    // 🔒 Check if token is blacklisted
+    const blacklisted = await Blacklist.findOne({ token });
+    if (blacklisted) {
+      return res.status(401).json({
+        success: false,
+        message: "Token has been revoked. Please log in again.",
+      });
+    }
+
     try {
-      // Verify token
+      // ✅ Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
-      // Add user and userId from payload
+
+      // Attach user info to request
       req.user = decoded;
-      req.userId = decoded.id || decoded._id; // Adding userId to req object
+      req.userId = decoded.id || decoded._id;
+
       next();
     } catch (error) {
       return res.status(401).json({

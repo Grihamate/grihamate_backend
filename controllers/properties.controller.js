@@ -176,7 +176,7 @@ const searchProperties = async (req, res) => {
     if (listingType) query.listingType = listingType;
     if (bhkType) query["basicDetails.bhkType"] = bhkType;
 
-    if (city) query["location.city"] = { $regex: city, $options: "i" };
+   
     if (locality) query["location.locality"] = { $regex: locality, $options: "i" };
 
     if (minPrice || maxPrice) {

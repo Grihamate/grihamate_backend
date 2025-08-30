@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const UserModel = require("../model/user.model");
 const nodemailer = require("nodemailer");
+const Blacklist = require("../model/blackList.model");
 
 
 const registerUser = async (req, res) => {
@@ -62,6 +63,29 @@ const loginUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+const logoutUser = async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1]; // Bearer <token>
+    if (!token) {
+      return res.status(400).json({ message: "Token not found" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Save token in blacklist until it expires
+    await Blacklist.create({
+      token,
+      expiresAt: new Date(decoded.exp * 1000) // JWT exp is in seconds
+    });
+
+    res.status(200).json({ message: "User logged out successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
 const updateUser = async (req, res) => {
   try {
@@ -245,6 +269,7 @@ module.exports = {
   deleteUser,
   getInTouch,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  logoutUser
 
 };
