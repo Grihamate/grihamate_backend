@@ -195,7 +195,7 @@ const forgotPassword = async (req, res) => {
     });
 
     
-    const resetLink = `http://localhost:5000/resetpassword/${token}`;
+    const resetLink = `https://grihamate-frontend-vite-repo.vercel.app/resetpassword/${token}`;
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
