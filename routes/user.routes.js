@@ -19,4 +19,5 @@ router.put('/resetpassword', authController.resetPassword);
 
 
 
+
 module.exports=router;
