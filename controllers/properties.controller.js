@@ -108,20 +108,75 @@ const addProperty = async (req, res) => {
 // };
 
 
-const getAllProperties = async (req, res) => {
+// const getAllProperties = async (req, res) => {
+//   try {
+//     const allProperties = await PropertyModel.find(); 
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Properties fetched successfully",
+//       allProperties
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
+
+const getAllProperties= async (req, res) => {
   try {
-    const allProperties = await PropertyModel.find(); 
+    const { 
+      propertyType, 
+      city, 
+      locality, 
+      minPrice, 
+      maxPrice, 
+      listingType, 
+      bhkType 
+    } = req.query;
+
+    // Build query object dynamically
+    let query = {};
+
+    if (propertyType) query.propertyType = propertyType;
+    if (listingType) query.listingType = listingType;
+    if (bhkType) query["basicDetails.bhkType"] = bhkType;
+    if (city) query["location.city"] = { $regex: city, $options: "i" };
+    if (locality) query["location.locality"] = { $regex: locality, $options: "i" };
+
+    if (minPrice || maxPrice) {
+      query["basicDetails.monthlyRent"] = {};
+      if (minPrice) query["basicDetails.monthlyRent"].$gte = parseInt(minPrice);
+      if (maxPrice) query["basicDetails.monthlyRent"].$lte = parseInt(maxPrice);
+    }
+
+    console.log("🔍 Final Query:", query);
+
+    const properties = await PropertyModel.find(query);
 
     res.status(200).json({
       success: true,
-      message: "Properties fetched successfully",
-      allProperties
+      message: Object.keys(req.query).length 
+        ? "Filtered properties fetched successfully"
+        : "All properties fetched successfully",
+      count: properties.length,
+      properties
     });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("❌ Error fetching properties:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
+
+
+
+
+
 
 
 
@@ -141,6 +196,9 @@ const getPropertyById = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+
+
 
 
 const getNumberOfProperties = async (req, res) => {
