@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const propertySchema = new mongoose.Schema({
   propertyType: {
     type: String,
-    enum: ["Apartment","House","Villa", "Office", "Shop"],
+    enum: ["Apartment", "Independent House", "Villa", "Office", "Shop"],
     required: true,
   },
   listingType: {
@@ -16,21 +16,51 @@ const propertySchema = new mongoose.Schema({
     area: { type: Number, required: true }, // in sq ft
     bhkType: { type: String }, // e.g., 1BHK, 2BHK, 3BHK
     bathrooms: { type: Number },
+
     furnishingStatus: {
-      type: String,
-      enum: ["Furnished", "Semi-Furnished", "Unfurnished"],
+      type: String
+    
     },
+
+    propertyFacing: {
+      type: String
+      
+    },
+
+    propertyAge: {
+      type: String
+      
+    },
+
     monthlyRent: { type: Number },
     securityDeposit: { type: Number },
     maintenanceCharges: { type: Number },
+
+    amenities: [{ type: String }], // e.g., ["Lift", "Parking", "Gym"]
   },
+
   location: {
     city: { type: String, required: true },
     locality: { type: String, required: true },
     fullAddress: { type: String },
   },
+
   description: { type: String },
-  images: [{ type: String }], // store image URLs
+  images: [
+  {
+    url: { type: String, required: true },
+    fileId: { type: String },
+    name: { type: String }
+  }
+],
+
+  whatsNearby: {
+    education: { name: String, distance: Number },
+    health: { name: String, distance: Number },
+    food: { name: String, distance: Number },
+    travel: { name: String, distance: Number },
+  },
+
   contactInfo: {
     owner: { type: String, required: true },
     phone: { type: String, required: true },
@@ -38,4 +68,62 @@ const propertySchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-module.exports=mongoose.model("Property", propertySchema);
+module.exports = mongoose.model("Property", propertySchema);
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const mongoose = require("mongoose");
+
+// const propertySchema = new mongoose.Schema({
+//   propertyType: {
+//     type: String,
+//     enum: ["Apartment","House", "Villa", "Office", "Shop"],
+//     required: true,
+//   },
+//   listingType: {
+//     type: String,
+//     enum: ["For Rent", "For Sale"],
+//     required: true,
+//   },
+//   basicDetails: {
+//     title: { type: String, required: true }, // Property Title
+//     area: { type: Number, required: true }, // in sq ft
+//     bhkType: { type: String }, // e.g., 1BHK, 2BHK, 3BHK
+//     bathrooms: { type: Number },
+//     furnishingStatus: {
+//       type: String,
+//       enum: ["Furnished", "Semi-Furnished", "Unfurnished"],
+//     },
+//     monthlyRent: { type: Number },
+//     securityDeposit: { type: Number },
+//     maintenanceCharges: { type: Number },
+//   },
+
+//   location: {
+//     city: { type: String, required: true },
+//     locality: { type: String, required: true },
+//     fullAddress: { type: String },
+//   },
+//   description: { type: String },
+//   images: [{ type: String }], // store image URLs
+//   contactInfo: {
+//     owner: { type: String, required: true },
+//     phone: { type: String, required: true },
+//     email: { type: String, required: true },
+//   },
+// }, { timestamps: true });
+
+// module.exports=mongoose.model("Property", propertySchema);
+
+
+

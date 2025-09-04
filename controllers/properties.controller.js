@@ -6,80 +6,80 @@ const { uploadFile } = require("../services/imageStorage.service");
 const storage = multer.memoryStorage();
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
-const addProperty = async (req, res) => {
-  try {
-    const {
-      propertyType,
-      listingType,
-      title,
-      area,
-      bhkType,
-      bathrooms,
-      furnishingStatus,
-      monthlyRent,
-      securityDeposit,
-      maintenanceCharges,
-      city,
-      locality,
-      fullAddress,
-      description,
-      owner,
-      phone,
-      email,
-      images // this can be URLs in JSON body
-    } = req.body;
+// const addProperty = async (req, res) => {
+//   try {
+//     const {
+//       propertyType,
+//       listingType,
+//       title,
+//       area,
+//       bhkType,
+//       bathrooms,
+//       furnishingStatus,
+//       monthlyRent,
+//       securityDeposit,
+//       maintenanceCharges,
+//       city,
+//       locality,
+//       fullAddress,
+//       description,
+//       owner,
+//       phone,
+//       email,
+//       images // this can be URLs in JSON body
+//     } = req.body;
 
-    let imageUrls = [];
+//     let imageUrls = [];
 
-    // If user uploaded files → upload to ImageKit
-    if (req.files?.length) {
-      const uploadResults = await Promise.all(req.files.map(file => uploadFile(file)));
-      imageUrls = uploadResults.map(r => r.url);
+//     // If user uploaded files → upload to ImageKit
+//     if (req.files?.length) {
+//       const uploadResults = await Promise.all(req.files.map(file => uploadFile(file)));
+//       imageUrls = uploadResults.map(r => r.url);
 
-    }
-    else{
-      console.log("no file recieved")
-    }
+//     }
+//     else{
+//       console.log("no file recieved")
+//     }
 
-    // If user passed URLs → append them
-    if (images) {
-      if (Array.isArray(images)) {
-        imageUrls = [...imageUrls, ...images];
-      } else if (typeof images === "string") {
-        imageUrls.push(images);
-      }
-    }
+//     // If user passed URLs → append them
+//     if (images) {
+//       if (Array.isArray(images)) {
+//         imageUrls = [...imageUrls, ...images];
+//       } else if (typeof images === "string") {
+//         imageUrls.push(images);
+//       }
+//     }
 
-    const newProperty = new PropertyModel({
-      propertyType,
-      listingType,
-      basicDetails: {
-        title,
-        area,
-        bhkType,
-        bathrooms,
-        furnishingStatus,
-        monthlyRent,
-        securityDeposit,
-        maintenanceCharges,
-      },
-      location: { city, locality, fullAddress },
-      description,
-      images: imageUrls,
-      contactInfo: { owner, phone, email },
-    });
+//     const newProperty = new PropertyModel({
+//       propertyType,
+//       listingType,
+//       basicDetails: {
+//         title,
+//         area,
+//         bhkType,
+//         bathrooms,
+//         furnishingStatus,
+//         monthlyRent,
+//         securityDeposit,
+//         maintenanceCharges,
+//       },
+//       location: { city, locality, fullAddress },
+//       description,
+//       images: imageUrls,
+//       contactInfo: { owner, phone, email },
+//     });
 
-    const savedProperty = await newProperty.save();
-    res.status(201).json({
-      success: true,
-      message: "Property added successfully",
-      property: savedProperty
-    });
-  } catch (error) {
-    console.error("❌ Error in addProperty:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+//     const savedProperty = await newProperty.save();
+//     res.status(201).json({
+//       success: true,
+//       message: "Property added successfully",
+//       property: savedProperty
+//     });
+//   } catch (error) {
+//     console.error("❌ Error in addProperty:", error);
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
 
 
 // const getAllProperties = async (req, res) => {
@@ -122,6 +122,110 @@ const addProperty = async (req, res) => {
 //     res.status(500).json({ success: false, message: error.message });
 //   }
 // };
+
+const addProperty = async (req, res) => {
+  try {
+    const {
+      propertyType,
+      listingType,
+      title,
+      area,
+      bhkType,
+      bathrooms,
+      furnishingStatus,
+      propertyFacing,
+      propertyAge,
+      monthlyRent,
+      securityDeposit,
+      maintenanceCharges,
+      city,
+      locality,
+      fullAddress,
+      description,
+      owner,
+      phone,
+      email,
+      images
+    } = req.body;
+
+    let imageObjects = [];
+
+    // 1️⃣ Handle uploaded files (via Multer + ImageKit)
+    if (req.files?.length) {
+      const uploadResults = await Promise.all(
+        req.files.map(file => uploadFile(file))
+      );
+      imageObjects = uploadResults.map(r => ({
+        url: r.url,
+        fileId: r.fileId,
+        name: r.name
+      }));
+    }
+
+    // 2️⃣ Handle image URLs (manual input via form-data or JSON)
+    if (images) {
+      let parsedImages = [];
+      if (Array.isArray(images)) {
+        parsedImages = images.map(url => ({ url }));
+      } else if (typeof images === "object") {
+        parsedImages = Object.values(images).map(url => ({ url }));
+      } else if (typeof images === "string") {
+        parsedImages = [{ url: images }];
+      }
+      imageObjects = [...imageObjects, ...parsedImages];
+    }
+
+    // 3️⃣ Build property object
+    const newProperty = new PropertyModel({
+      propertyType: propertyType?.trim(),
+      listingType: listingType?.trim(),
+      basicDetails: {
+        title: req.body?.basicDetails?.title || title,
+        area: req.body?.basicDetails?.area || area,
+        bhkType: req.body?.basicDetails?.bhkType || bhkType,
+        bathrooms: req.body?.basicDetails?.bathrooms || bathrooms,
+        furnishingStatus:
+          req.body?.basicDetails?.furnishingStatus || furnishingStatus,
+        propertyFacing:
+          req.body?.basicDetails?.propertyFacing || propertyFacing,
+        propertyAge: req.body?.basicDetails?.propertyAge || propertyAge,
+        monthlyRent: req.body?.basicDetails?.monthlyRent || monthlyRent,
+        securityDeposit:
+          req.body?.basicDetails?.securityDeposit || securityDeposit,
+        maintenanceCharges:
+          req.body?.basicDetails?.maintenanceCharges || maintenanceCharges,
+        amenities:
+          req.body?.basicDetails?.amenities || req.body?.amenities || []
+      },
+      location: {
+        city: req.body?.location?.city || city,
+        locality: req.body?.location?.locality || locality,
+        fullAddress: req.body?.location?.fullAddress || fullAddress
+      },
+      description,
+      images: imageObjects, // storing { url, fileId, name }
+      whatsNearby: req.body.whatsNearby || {},
+      contactInfo: {
+        owner: req.body?.contactInfo?.owner || owner,
+        phone: req.body?.contactInfo?.phone || phone,
+        email: req.body?.contactInfo?.email || email
+      }
+    });
+
+    // 4️⃣ Save to DB
+    const savedProperty = await newProperty.save();
+
+    res.status(201).json({
+      success: true,
+      message: "✅ Property added successfully",
+      property: savedProperty
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 
 
 const getAllProperties= async (req, res) => {
