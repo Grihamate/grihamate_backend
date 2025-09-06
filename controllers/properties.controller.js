@@ -279,11 +279,6 @@ const getAllProperties= async (req, res) => {
 
 
 
-
-
-
-
-
 const getPropertyById = async (req, res) => {
   try {
     const {id} =req.params;
@@ -366,6 +361,9 @@ const searchProperties = async (req, res) => {
     });
   }
 };
+
+
+
 
 
 

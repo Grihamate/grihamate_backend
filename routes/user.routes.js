@@ -5,6 +5,7 @@ const authController = require('../controllers/user.controller');
 const authMiddleware = require('../middleware/auth.middleware');
 
 
+
 router.post('/register', authController.registerUser);
 router.post('/login', authController.loginUser);
 router.post('/logout', authMiddleware, authController.logoutUser);
@@ -14,6 +15,7 @@ router.delete('/delete/:id', authMiddleware, authController.deleteUser);
 router.post('/getintouch', authController.getInTouch);
 router.post('/forgotpassword', authController.forgotPassword);
 router.put('/resetpassword', authController.resetPassword);
+router.post('/subscribe', authController.subscribeNewsletter);
 
 
 

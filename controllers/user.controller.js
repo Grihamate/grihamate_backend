@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const UserModel = require("../model/user.model");
 const nodemailer = require("nodemailer");
 const Blacklist = require("../model/blackList.model");
+const sendEmail = require("../services/sendEmail")
 
 
 const registerUser = async (req, res) => {
@@ -256,7 +257,56 @@ const resetPassword = async (req, res) => {
 
 
 
-///////////////////////////////////////////////////////////////////////////////
+const subscribeNewsletter = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
+
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Your email is not registered with us yet" });
+    }
+
+    if (user.isSubscribed) {
+      // Already subscribed → send reminder email
+      await sendEmail(
+        user.email,
+        "Already Subscribed",
+        "<h1>You are already subscribed!</h1><p>You will continue to get updates from our team.</p>"
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "User already subscribed, reminder email sent",
+      });
+    }
+
+    // If not subscribed, update
+    user.isSubscribed = true;
+    await user.save();
+
+    await sendEmail(
+      user.email,
+      "Subscription Confirmation",
+      "<h1>Thank you for subscribing!</h1><p>You will now receive updates about our properties.</p>"
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Subscribed successfully",
+      user: { email: user.email, isSubscribed: user.isSubscribed },
+    });
+  } catch (error) {
+    console.error("Error in subscribeNewsletter:", error);
+    res.status(500).json({ success: false, message: error.message || "Failed to subscribe" });
+  }
+};
+
+
+
 
 
 
@@ -270,6 +320,7 @@ module.exports = {
   getInTouch,
   forgotPassword,
   resetPassword,
-  logoutUser
+  logoutUser,
+  subscribeNewsletter
 
 };
