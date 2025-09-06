@@ -307,10 +307,6 @@ const subscribeNewsletter = async (req, res) => {
 
 
 
-
-
-
-
 module.exports = {
   getUserProfile,
   registerUser,
