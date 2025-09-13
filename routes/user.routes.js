@@ -16,6 +16,7 @@ router.post('/getintouch', authController.getInTouch);
 router.post('/forgotpassword', authController.forgotPassword);
 router.put('/resetpassword', authController.resetPassword);
 router.post('/subscribe', authController.subscribeNewsletter);
+router.post('/bookvisit', authMiddleware, authController.bookSite);
 
 
 
