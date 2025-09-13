@@ -54,6 +54,7 @@ const propertySchema = new mongoose.Schema({
   }
 ],
 
+
   whatsNearby: {
     education: { name: String, distance: Number },
     health: { name: String, distance: Number },
