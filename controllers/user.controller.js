@@ -15,6 +15,7 @@ const registerUser = async (req, res) => {
     }
 
     const existingUser = await UserModel.findOne({ $or: [{ email }, { phone }]});
+    
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
