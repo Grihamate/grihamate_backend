@@ -12,4 +12,5 @@ router.get("/search",authMiddleware , propertiesController.searchProperties);
 router.get("/:id",authMiddleware ,propertiesController.getPropertyById);
 
 
+
 module.exports = router;
