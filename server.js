@@ -23,10 +23,10 @@ app.use(cors({
 
 const userRoutes = require('./routes/user.routes');
 const propertyRoutes = require('./routes/properties.routes');
-
+const saleRoutes = require('./routes/sale.routes');
 app.use('/api/user', userRoutes);
 app.use('/api/property', propertyRoutes);
-
+app.use('/api/sale', saleRoutes);
 
 app.get("/", (req, res) => {
   res.send("Server is reachable");

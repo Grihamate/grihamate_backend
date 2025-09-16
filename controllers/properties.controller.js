@@ -364,4 +364,6 @@ const searchProperties = async (req, res) => {
 
 
 
+
+
 module.exports = { upload, addProperty,getAllProperties,getPropertyById,getNumberOfProperties ,searchProperties};
