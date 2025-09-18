@@ -37,7 +37,6 @@ const addSaleProperty = async (req, res) => {
       landmark,
       fullAddress,
       pincode,
-      
 
       // Extra
       description,
@@ -78,16 +77,14 @@ const addSaleProperty = async (req, res) => {
       }
     }
 
-    // ✅ Handle images (via Multer + ImageKit)
+    // ✅ Handle images via ImageKit
     let imageObjects = [];
     if (req.files?.length) {
-      const uploadResults = await Promise.all(
-        req.files.map(file => uploadFile(file)) // uploadFile → ImageKit uploader
-      );
+      const uploadResults = await Promise.all(req.files.map(file => uploadFile(file)));
       imageObjects = uploadResults.map(r => ({
         url: r.url,
         fileId: r.fileId,
-        name: r.name
+        name: r.name,
       }));
     }
 
@@ -111,7 +108,7 @@ const addSaleProperty = async (req, res) => {
       }] : []
     };
 
-    // ✅ Create property
+    // ✅ Create property document
     const newProperty = new SellPropertyModel({
       propertyType: propertyType?.trim(),
       listingType: listingType?.trim(),
@@ -138,10 +135,9 @@ const addSaleProperty = async (req, res) => {
         landmark,
         fullAddress,
         pincode,
-       
       },
       description,
-      images: imageObjects, // ✅ only multiple uploaded images now
+      images: imageObjects, // ✅ stored in ImageKit
       floorPlan: {
         diningArea: diningArea ? Number(diningArea) : undefined,
         bedroomArea: bedroomArea ? Number(bedroomArea) : undefined,
@@ -171,6 +167,7 @@ const addSaleProperty = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 
 

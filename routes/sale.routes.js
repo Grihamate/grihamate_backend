@@ -7,10 +7,7 @@ const router = express.Router();
 
 router.post(
   "/add",
-  authMiddleware,
-  saleController.upload.fields([
-    { name: "images", maxCount: 10 } // allow file uploads
-  ]),
+  authMiddleware, saleController.upload.array("images", 10),
   saleController.addSaleProperty
 );
 
