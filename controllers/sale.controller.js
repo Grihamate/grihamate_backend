@@ -11,24 +11,44 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 const addSaleProperty = async (req, res) => {
   try {
     const {
+      // Core property info
       propertyType,
       listingType,
+
+      // Basic Details
       title,
       area,
+      carpetArea,
       bhkType,
       bathrooms,
       furnishingStatus,
       propertyFacing,
       propertyAge,
+      floor,
+      transactionType,
       price,
+      priceUnit,
       maintenanceCharges,
+      reraId,
+
+      // Location
       city,
       locality,
+      landmark,
       fullAddress,
+      pincode,
+      
+
+      // Extra
       description,
+
+      // Contact Info
+      advisor,
       owner,
       phone,
       email,
+
+      // Nearby
       educationName,
       educationDistance,
       healthName,
@@ -36,23 +56,34 @@ const addSaleProperty = async (req, res) => {
       foodName,
       foodDistance,
       travelName,
-      travelDistance
+      travelDistance,
+
+      // Floor plan
+      diningArea,
+      bedroomArea,
+      bathroomArea,
+
+      // Media
+      virtualTour,
+      video
     } = req.body;
 
-
+    // ✅ Handle amenities
     let amenities = [];
     if (req.body.amenities) {
       if (Array.isArray(req.body.amenities)) {
         amenities = req.body.amenities;
       } else {
-        amenities = [req.body.amenities]; 
+        amenities = [req.body.amenities];
       }
     }
 
- 
+    // ✅ Handle images (via Multer + ImageKit)
     let imageObjects = [];
     if (req.files?.length) {
-      const uploadResults = await Promise.all(req.files.map(uploadFile));
+      const uploadResults = await Promise.all(
+        req.files.map(file => uploadFile(file)) // uploadFile → ImageKit uploader
+      );
       imageObjects = uploadResults.map(r => ({
         url: r.url,
         fileId: r.fileId,
@@ -60,7 +91,7 @@ const addSaleProperty = async (req, res) => {
       }));
     }
 
-    
+    // ✅ Handle nearby places
     const whatsNearby = {
       education: educationName && educationDistance ? [{
         name: educationName,
@@ -80,34 +111,50 @@ const addSaleProperty = async (req, res) => {
       }] : []
     };
 
-
+    // ✅ Create property
     const newProperty = new SellPropertyModel({
       propertyType: propertyType?.trim(),
       listingType: listingType?.trim(),
       basicDetails: {
         title,
         area,
+        carpetArea,
         bhkType,
         bathrooms,
         furnishingStatus,
         propertyFacing,
         propertyAge,
+        floor,
+        transactionType,
         price,
+        priceUnit,
         maintenanceCharges,
-        amenities
+        reraId,
+        amenities,
       },
       location: {
         city,
         locality,
-        fullAddress
+        landmark,
+        fullAddress,
+        pincode,
+       
       },
       description,
-      images: imageObjects,
+      images: imageObjects, // ✅ only multiple uploaded images now
+      floorPlan: {
+        diningArea: diningArea ? Number(diningArea) : undefined,
+        bedroomArea: bedroomArea ? Number(bedroomArea) : undefined,
+        bathroomArea: bathroomArea ? Number(bathroomArea) : undefined,
+      },
+      video,
+      virtualTour,
       whatsNearby,
       contactInfo: {
+        advisor,
         owner,
         phone,
-        email
+        email,
       }
     });
 
@@ -124,6 +171,7 @@ const addSaleProperty = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 
 // get all sale property
