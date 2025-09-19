@@ -32,6 +32,7 @@ const addSaleProperty = async (req, res) => {
       reraId,
 
       // Location
+      state,
       city,
       locality,
       landmark,
@@ -130,6 +131,7 @@ const addSaleProperty = async (req, res) => {
         amenities,
       },
       location: {
+        state,
         city,
         locality,
         landmark,

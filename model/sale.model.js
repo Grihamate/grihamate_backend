@@ -38,6 +38,7 @@ const sellPropertySchema = new mongoose.Schema(
       amenities: [{ type: String }], // e.g., ["Lift", "Parking", "Gym"]
     },
     location: {
+      state: { type: String, required: true },
       city: { type: String, required: true },
       locality: { type: String, required: true },
       landmark: { type: String },
