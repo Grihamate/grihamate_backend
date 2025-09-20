@@ -122,7 +122,109 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 //     res.status(500).json({ success: false, message: error.message });
 //   }
 // };
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// const addProperty = async (req, res) => {
+//   try {
+//     const {
+//       propertyType,
+//       listingType,
+//       title,
+//       area,
+//       bhkType,
+//       bathrooms,
+//       furnishingStatus,
+//       propertyFacing,
+//       propertyAge,
+//       monthlyRent,
+//       securityDeposit,
+//       maintenanceCharges,
+//       city,
+//       locality,
+//       fullAddress,
+//       description,
+//       owner,
+//       phone,
+//       email,
+//       images
+//     } = req.body;
 
+//     let imageObjects = [];
+
+//     // 1️⃣ Handle uploaded files (via Multer + ImageKit)
+//     if (req.files?.length) {
+//       const uploadResults = await Promise.all(
+//         req.files.map(file => uploadFile(file))
+//       );
+//       imageObjects = uploadResults.map(r => ({
+//         url: r.url,
+//         fileId: r.fileId,
+//         name: r.name
+//       }));
+//     }
+
+//     // 2️⃣ Handle image URLs (manual input via form-data or JSON)
+//     if (images) {
+//       let parsedImages = [];
+//       if (Array.isArray(images)) {
+//         parsedImages = images.map(url => ({ url }));
+//       } else if (typeof images === "object") {
+//         parsedImages = Object.values(images).map(url => ({ url }));
+//       } else if (typeof images === "string") {
+//         parsedImages = [{ url: images }];
+//       }
+//       imageObjects = [...imageObjects, ...parsedImages];
+//     }
+
+//     // 3️⃣ Build property object
+//     const newProperty = new PropertyModel({
+//       propertyType: propertyType?.trim(),
+//       listingType: listingType?.trim(),
+//       basicDetails: {
+//         title: req.body?.basicDetails?.title || title,
+//         area: req.body?.basicDetails?.area || area,
+//         bhkType: req.body?.basicDetails?.bhkType || bhkType,
+//         bathrooms: req.body?.basicDetails?.bathrooms || bathrooms,
+//         furnishingStatus:
+//           req.body?.basicDetails?.furnishingStatus || furnishingStatus,
+//         propertyFacing:
+//           req.body?.basicDetails?.propertyFacing || propertyFacing,
+//         propertyAge: req.body?.basicDetails?.propertyAge || propertyAge,
+//         monthlyRent: req.body?.basicDetails?.monthlyRent || monthlyRent,
+//         securityDeposit:
+//           req.body?.basicDetails?.securityDeposit || securityDeposit,
+//         maintenanceCharges:
+//           req.body?.basicDetails?.maintenanceCharges || maintenanceCharges,
+//         amenities:
+//           req.body?.basicDetails?.amenities || req.body?.amenities || []
+//       },
+//       location: {
+//         city: req.body?.location?.city || city,
+//         locality: req.body?.location?.locality || locality,
+//         fullAddress: req.body?.location?.fullAddress || fullAddress
+//       },
+//       description,
+//       images: imageObjects, // storing { url, fileId, name }
+//       whatsNearby: req.body.whatsNearby || {},
+//       contactInfo: {
+//         owner: req.body?.contactInfo?.owner || owner,
+//         phone: req.body?.contactInfo?.phone || phone,
+//         email: req.body?.contactInfo?.email || email
+//       }
+//     });
+
+//     // 4️⃣ Save to DB
+//     const savedProperty = await newProperty.save();
+
+//     res.status(201).json({
+//       success: true,
+//       message: "✅ Property added successfully",
+//       property: savedProperty
+//     });
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+/////////
 const addProperty = async (req, res) => {
   try {
     const {
@@ -175,7 +277,43 @@ const addProperty = async (req, res) => {
       imageObjects = [...imageObjects, ...parsedImages];
     }
 
-    // 3️⃣ Build property object
+    // 3️⃣ Build whatsNearby from flat fields (like educationName, etc.)
+    const whatsNearby = {
+      education: req.body.educationName && req.body.educationDistance
+        ? {
+            name: req.body.educationName,
+            distance: parseFloat(req.body.educationDistance)
+          }
+        : undefined,
+
+      health: req.body.healthName && req.body.healthDistance
+        ? {
+            name: req.body.healthName,
+            distance: parseFloat(req.body.healthDistance)
+          }
+        : undefined,
+
+      food: req.body.foodName && req.body.foodDistance
+        ? {
+            name: req.body.foodName,
+            distance: parseFloat(req.body.foodDistance)
+          }
+        : undefined,
+
+      travel: req.body.travelName && req.body.travelDistance
+        ? {
+            name: req.body.travelName,
+            distance: parseFloat(req.body.travelDistance)
+          }
+        : undefined
+    };
+
+    // ✅ Remove empty (undefined) fields from whatsNearby
+    Object.keys(whatsNearby).forEach(key => {
+      if (!whatsNearby[key]) delete whatsNearby[key];
+    });
+
+    // 4️⃣ Build property object
     const newProperty = new PropertyModel({
       propertyType: propertyType?.trim(),
       listingType: listingType?.trim(),
@@ -204,7 +342,7 @@ const addProperty = async (req, res) => {
       },
       description,
       images: imageObjects, // storing { url, fileId, name }
-      whatsNearby: req.body.whatsNearby || {},
+      whatsNearby, // ✅ Now structured correctly
       contactInfo: {
         owner: req.body?.contactInfo?.owner || owner,
         phone: req.body?.contactInfo?.phone || phone,
@@ -212,7 +350,7 @@ const addProperty = async (req, res) => {
       }
     });
 
-    // 4️⃣ Save to DB
+    // 5️⃣ Save to DB
     const savedProperty = await newProperty.save();
 
     res.status(201).json({
@@ -220,11 +358,14 @@ const addProperty = async (req, res) => {
       message: "✅ Property added successfully",
       property: savedProperty
     });
+
   } catch (error) {
+    console.error("❌ Error adding property:", error.message);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
+////////
 
 
 
