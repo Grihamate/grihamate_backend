@@ -1,6 +1,7 @@
 const PropertyModel = require("../model/properties.model");
 const multer = require("multer");
 const { uploadFile } = require("../services/imageStorage.service");
+const UserModel = require("../model/user.model");
 
 // Multer for file uploads
 const storage = multer.memoryStorage();
@@ -225,6 +226,8 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 //   }
 // };
 /////////
+
+
 const addProperty = async (req, res) => {
   try {
     const {
@@ -277,38 +280,41 @@ const addProperty = async (req, res) => {
       imageObjects = [...imageObjects, ...parsedImages];
     }
 
-    // 3️⃣ Build whatsNearby from flat fields (like educationName, etc.)
+    // 3️⃣ Build whatsNearby from flat fields
     const whatsNearby = {
-      education: req.body.educationName && req.body.educationDistance
-        ? {
-            name: req.body.educationName,
-            distance: parseFloat(req.body.educationDistance)
-          }
-        : undefined,
+      education:
+        req.body.educationName && req.body.educationDistance
+          ? {
+              name: req.body.educationName,
+              distance: parseFloat(req.body.educationDistance)
+            }
+          : undefined,
 
-      health: req.body.healthName && req.body.healthDistance
-        ? {
-            name: req.body.healthName,
-            distance: parseFloat(req.body.healthDistance)
-          }
-        : undefined,
+      health:
+        req.body.healthName && req.body.healthDistance
+          ? {
+              name: req.body.healthName,
+              distance: parseFloat(req.body.healthDistance)
+            }
+          : undefined,
 
-      food: req.body.foodName && req.body.foodDistance
-        ? {
-            name: req.body.foodName,
-            distance: parseFloat(req.body.foodDistance)
-          }
-        : undefined,
+      food:
+        req.body.foodName && req.body.foodDistance
+          ? {
+              name: req.body.foodName,
+              distance: parseFloat(req.body.foodDistance)
+            }
+          : undefined,
 
-      travel: req.body.travelName && req.body.travelDistance
-        ? {
-            name: req.body.travelName,
-            distance: parseFloat(req.body.travelDistance)
-          }
-        : undefined
+      travel:
+        req.body.travelName && req.body.travelDistance
+          ? {
+              name: req.body.travelName,
+              distance: parseFloat(req.body.travelDistance)
+            }
+          : undefined
     };
 
-    // ✅ Remove empty (undefined) fields from whatsNearby
     Object.keys(whatsNearby).forEach(key => {
       if (!whatsNearby[key]) delete whatsNearby[key];
     });
@@ -341,8 +347,8 @@ const addProperty = async (req, res) => {
         fullAddress: req.body?.location?.fullAddress || fullAddress
       },
       description,
-      images: imageObjects, // storing { url, fileId, name }
-      whatsNearby, // ✅ Now structured correctly
+      images: imageObjects,
+      whatsNearby,
       contactInfo: {
         owner: req.body?.contactInfo?.owner || owner,
         phone: req.body?.contactInfo?.phone || phone,
@@ -350,15 +356,19 @@ const addProperty = async (req, res) => {
       }
     });
 
-    // 5️⃣ Save to DB
+    // 5️⃣ Save property
     const savedProperty = await newProperty.save();
+
+    // 6️⃣ Push property ID into user's my_properties
+    await UserModel.findByIdAndUpdate(req.user._id, {
+      $push: { my_properties: savedProperty._id }
+    });
 
     res.status(201).json({
       success: true,
       message: "✅ Property added successfully",
       property: savedProperty
     });
-
   } catch (error) {
     console.error("❌ Error adding property:", error.message);
     res.status(500).json({ success: false, message: error.message });

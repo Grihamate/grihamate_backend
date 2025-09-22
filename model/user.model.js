@@ -7,7 +7,23 @@ const UserSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     password: { type: String, required: true },
     isSubscribed: { type: Boolean, default: false },
-  }
+    
+    my_properties: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Property"
+      }
+    ],
+    booking_history: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Property"
+      }
+    ]
+
+  },
+  { timestamps: true }
+
 );
 
 module.exports = mongoose.model("User", UserSchema);
