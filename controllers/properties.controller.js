@@ -137,7 +137,7 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
       }
     });
 
-    console.log("req.user in addProperty:", req.user);
+    
 
     // 5️⃣ Save property
     const savedProperty = await newProperty.save();
@@ -148,6 +148,7 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
   { $push: { my_properties: savedProperty._id } },
   { new: true }
 );
+
 
 
     res.status(201).json({
