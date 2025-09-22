@@ -9,11 +9,12 @@ const UserSchema = new mongoose.Schema(
     isSubscribed: { type: Boolean, default: false },
     
     my_properties: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Property"
+      { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: "Property" 
       }
     ],
+
     my_sell_properties: [
       {
         type: mongoose.Schema.Types.ObjectId,

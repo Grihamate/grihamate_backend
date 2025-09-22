@@ -7,6 +7,337 @@ const UserModel = require("../model/user.model");
 const storage = multer.memoryStorage();
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
+
+
+ const addProperty = async (req, res) => {
+  try {
+    const {
+      propertyType,
+      listingType,
+      title,
+      area,
+      bhkType,
+      bathrooms,
+      furnishingStatus,
+      propertyFacing,
+      propertyAge,
+      monthlyRent,
+      securityDeposit,
+      maintenanceCharges,
+      city,
+      locality,
+      fullAddress,
+      description,
+      owner,
+      phone,
+      email,
+      images
+    } = req.body;
+
+    let imageObjects = [];
+
+    // 1️⃣ Handle uploaded files (via Multer + ImageKit)
+    if (req.files?.length) {
+      const uploadResults = await Promise.all(
+        req.files.map(file => uploadFile(file))
+      );
+      imageObjects = uploadResults.map(r => ({
+        url: r.url,
+        fileId: r.fileId,
+        name: r.name
+      }));
+    }
+
+    // 2️⃣ Handle image URLs (manual input via form-data or JSON)
+    if (images) {
+      let parsedImages = [];
+      if (Array.isArray(images)) {
+        parsedImages = images.map(url => ({ url }));
+      } else if (typeof images === "object") {
+        parsedImages = Object.values(images).map(url => ({ url }));
+      } else if (typeof images === "string") {
+        parsedImages = [{ url: images }];
+      }
+      imageObjects = [...imageObjects, ...parsedImages];
+    }
+
+    // 3️⃣ Build whatsNearby from flat fields
+    const whatsNearby = {
+      education:
+        req.body.educationName && req.body.educationDistance
+          ? {
+              name: req.body.educationName,
+              distance: parseFloat(req.body.educationDistance)
+            }
+          : undefined,
+
+      health:
+        req.body.healthName && req.body.healthDistance
+          ? {
+              name: req.body.healthName,
+              distance: parseFloat(req.body.healthDistance)
+            }
+          : undefined,
+
+      food:
+        req.body.foodName && req.body.foodDistance
+          ? {
+              name: req.body.foodName,
+              distance: parseFloat(req.body.foodDistance)
+            }
+          : undefined,
+
+      travel:
+        req.body.travelName && req.body.travelDistance
+          ? {
+              name: req.body.travelName,
+              distance: parseFloat(req.body.travelDistance)
+            }
+          : undefined
+    };
+
+    Object.keys(whatsNearby).forEach(key => {
+      if (!whatsNearby[key]) delete whatsNearby[key];
+    });
+
+    // 4️⃣ Build property object
+    const newProperty = new PropertyModel({
+      propertyType: propertyType?.trim(),
+      listingType: listingType?.trim(),
+      basicDetails: {
+        title: req.body?.basicDetails?.title || title,
+        area: req.body?.basicDetails?.area || area,
+        bhkType: req.body?.basicDetails?.bhkType || bhkType,
+        bathrooms: req.body?.basicDetails?.bathrooms || bathrooms,
+        furnishingStatus:
+          req.body?.basicDetails?.furnishingStatus || furnishingStatus,
+        propertyFacing:
+          req.body?.basicDetails?.propertyFacing || propertyFacing,
+        propertyAge: req.body?.basicDetails?.propertyAge || propertyAge,
+        monthlyRent: req.body?.basicDetails?.monthlyRent || monthlyRent,
+        securityDeposit:
+          req.body?.basicDetails?.securityDeposit || securityDeposit,
+        maintenanceCharges:
+          req.body?.basicDetails?.maintenanceCharges || maintenanceCharges,
+        amenities:
+          req.body?.basicDetails?.amenities || req.body?.amenities || []
+      },
+      location: {
+        city: req.body?.location?.city || city,
+        locality: req.body?.location?.locality || locality,
+        fullAddress: req.body?.location?.fullAddress || fullAddress
+      },
+      description,
+      images: imageObjects,
+      whatsNearby,
+      contactInfo: {
+        owner: req.body?.contactInfo?.owner || owner,
+        phone: req.body?.contactInfo?.phone || phone,
+        email: req.body?.contactInfo?.email || email
+      }
+    });
+
+    console.log("req.user in addProperty:", req.user);
+
+    // 5️⃣ Save property
+    const savedProperty = await newProperty.save();
+
+    // 6️⃣ Push property ID into user's my_properties
+   await UserModel.findByIdAndUpdate(
+  req.user._id,
+  { $push: { my_properties: savedProperty._id } },
+  { new: true }
+);
+
+
+    res.status(201).json({
+      success: true,
+      message: "✅ Property added successfully",
+      property: savedProperty
+    });
+  } catch (error) {
+    console.error("❌ Error adding property:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+////////
+
+
+
+const getAllProperties= async (req, res) => {
+  try {
+    const { 
+      propertyType, 
+      city, 
+      locality, 
+      minPrice, 
+      maxPrice, 
+      listingType, 
+      bhkType 
+    } = req.query;
+
+    // Build query object dynamically
+    let query = {};
+
+    if (propertyType) query.propertyType = propertyType;
+    if (listingType) query.listingType = listingType;
+    if (bhkType) query["basicDetails.bhkType"] = bhkType;
+    if (city) query["location.city"] = { $regex: city, $options: "i" };
+    if (locality) query["location.locality"] = { $regex: locality, $options: "i" };
+
+    if (minPrice || maxPrice) {
+      query["basicDetails.monthlyRent"] = {};
+      if (minPrice) query["basicDetails.monthlyRent"].$gte = parseInt(minPrice);
+      if (maxPrice) query["basicDetails.monthlyRent"].$lte = parseInt(maxPrice);
+    }
+
+    console.log("🔍 Final Query:", query);
+
+    const properties = await PropertyModel.find(query);
+
+    res.status(200).json({
+      success: true,
+      message: Object.keys(req.query).length 
+        ? "Filtered properties fetched successfully"
+        : "All properties fetched successfully",
+      count: properties.length,
+      properties
+    });
+
+  } catch (error) {
+    console.error("❌ Error fetching properties:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+
+const getPropertyById = async (req, res) => {
+  try {
+    const {id} =req.params;
+    const property = await PropertyModel.findById(id);
+    if (!property) {
+      return res.status(404).json({ success: false, message: "Property not found" });
+    }
+    res.status(200).json({
+      success: true,
+      property
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+
+
+const getNumberOfProperties = async (req, res) => {
+  try {
+    const number ="7011769523"
+    res.status(200).json({
+      message: "Number of properties fetched successfully",
+      success: true,
+      number
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message , number });
+  }
+};
+
+const searchProperties = async (req, res) => {
+  try {
+    const { 
+      propertyType, 
+      city, 
+      locality, 
+      minPrice, 
+      maxPrice, 
+      listingType, 
+      bhkType 
+    } = req.query;
+
+    // Build query object dynamically
+    let query = {};
+
+    if (propertyType) query.propertyType = propertyType;
+    if (listingType) query.listingType = listingType;
+    if (bhkType) query["basicDetails.bhkType"] = bhkType;
+
+   
+    if (locality) query["location.locality"] = { $regex: locality, $options: "i" };
+
+    if (minPrice || maxPrice) {
+      query["basicDetails.monthlyRent"] = {};
+      if (minPrice) query["basicDetails.monthlyRent"].$gte = parseInt(minPrice);
+      if (maxPrice) query["basicDetails.monthlyRent"].$lte = parseInt(maxPrice);
+    }
+
+    console.log("🔍 Final Query:", query);
+
+    const properties = await PropertyModel.find(query);
+    console.log(`✅ Found ${properties.length} properties matching criteria.`);
+
+    res.status(200).json({
+      success: true,
+      count: properties.length,
+      properties
+    });
+
+  } catch (error) {
+    console.error("❌ Search Error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+
+
+
+module.exports = { upload, addProperty,getAllProperties,getPropertyById,getNumberOfProperties ,searchProperties};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // const addProperty = async (req, res) => {
 //   try {
 //     const {
@@ -226,295 +557,3 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 //   }
 // };
 /////////
-
-
-const addProperty = async (req, res) => {
-  try {
-    const {
-      propertyType,
-      listingType,
-      title,
-      area,
-      bhkType,
-      bathrooms,
-      furnishingStatus,
-      propertyFacing,
-      propertyAge,
-      monthlyRent,
-      securityDeposit,
-      maintenanceCharges,
-      city,
-      locality,
-      fullAddress,
-      description,
-      owner,
-      phone,
-      email,
-      images
-    } = req.body;
-
-    let imageObjects = [];
-
-    // 1️⃣ Handle uploaded files (via Multer + ImageKit)
-    if (req.files?.length) {
-      const uploadResults = await Promise.all(
-        req.files.map(file => uploadFile(file))
-      );
-      imageObjects = uploadResults.map(r => ({
-        url: r.url,
-        fileId: r.fileId,
-        name: r.name
-      }));
-    }
-
-    // 2️⃣ Handle image URLs (manual input via form-data or JSON)
-    if (images) {
-      let parsedImages = [];
-      if (Array.isArray(images)) {
-        parsedImages = images.map(url => ({ url }));
-      } else if (typeof images === "object") {
-        parsedImages = Object.values(images).map(url => ({ url }));
-      } else if (typeof images === "string") {
-        parsedImages = [{ url: images }];
-      }
-      imageObjects = [...imageObjects, ...parsedImages];
-    }
-
-    // 3️⃣ Build whatsNearby from flat fields
-    const whatsNearby = {
-      education:
-        req.body.educationName && req.body.educationDistance
-          ? {
-              name: req.body.educationName,
-              distance: parseFloat(req.body.educationDistance)
-            }
-          : undefined,
-
-      health:
-        req.body.healthName && req.body.healthDistance
-          ? {
-              name: req.body.healthName,
-              distance: parseFloat(req.body.healthDistance)
-            }
-          : undefined,
-
-      food:
-        req.body.foodName && req.body.foodDistance
-          ? {
-              name: req.body.foodName,
-              distance: parseFloat(req.body.foodDistance)
-            }
-          : undefined,
-
-      travel:
-        req.body.travelName && req.body.travelDistance
-          ? {
-              name: req.body.travelName,
-              distance: parseFloat(req.body.travelDistance)
-            }
-          : undefined
-    };
-
-    Object.keys(whatsNearby).forEach(key => {
-      if (!whatsNearby[key]) delete whatsNearby[key];
-    });
-
-    // 4️⃣ Build property object
-    const newProperty = new PropertyModel({
-      propertyType: propertyType?.trim(),
-      listingType: listingType?.trim(),
-      basicDetails: {
-        title: req.body?.basicDetails?.title || title,
-        area: req.body?.basicDetails?.area || area,
-        bhkType: req.body?.basicDetails?.bhkType || bhkType,
-        bathrooms: req.body?.basicDetails?.bathrooms || bathrooms,
-        furnishingStatus:
-          req.body?.basicDetails?.furnishingStatus || furnishingStatus,
-        propertyFacing:
-          req.body?.basicDetails?.propertyFacing || propertyFacing,
-        propertyAge: req.body?.basicDetails?.propertyAge || propertyAge,
-        monthlyRent: req.body?.basicDetails?.monthlyRent || monthlyRent,
-        securityDeposit:
-          req.body?.basicDetails?.securityDeposit || securityDeposit,
-        maintenanceCharges:
-          req.body?.basicDetails?.maintenanceCharges || maintenanceCharges,
-        amenities:
-          req.body?.basicDetails?.amenities || req.body?.amenities || []
-      },
-      location: {
-        city: req.body?.location?.city || city,
-        locality: req.body?.location?.locality || locality,
-        fullAddress: req.body?.location?.fullAddress || fullAddress
-      },
-      description,
-      images: imageObjects,
-      whatsNearby,
-      contactInfo: {
-        owner: req.body?.contactInfo?.owner || owner,
-        phone: req.body?.contactInfo?.phone || phone,
-        email: req.body?.contactInfo?.email || email
-      }
-    });
-
-    // 5️⃣ Save property
-    const savedProperty = await newProperty.save();
-
-    // 6️⃣ Push property ID into user's my_properties
-    await UserModel.findByIdAndUpdate(req.user._id, {
-      $push: { my_properties: savedProperty._id }
-    });
-
-    res.status(201).json({
-      success: true,
-      message: "✅ Property added successfully",
-      property: savedProperty
-    });
-  } catch (error) {
-    console.error("❌ Error adding property:", error.message);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-////////
-
-
-
-const getAllProperties= async (req, res) => {
-  try {
-    const { 
-      propertyType, 
-      city, 
-      locality, 
-      minPrice, 
-      maxPrice, 
-      listingType, 
-      bhkType 
-    } = req.query;
-
-    // Build query object dynamically
-    let query = {};
-
-    if (propertyType) query.propertyType = propertyType;
-    if (listingType) query.listingType = listingType;
-    if (bhkType) query["basicDetails.bhkType"] = bhkType;
-    if (city) query["location.city"] = { $regex: city, $options: "i" };
-    if (locality) query["location.locality"] = { $regex: locality, $options: "i" };
-
-    if (minPrice || maxPrice) {
-      query["basicDetails.monthlyRent"] = {};
-      if (minPrice) query["basicDetails.monthlyRent"].$gte = parseInt(minPrice);
-      if (maxPrice) query["basicDetails.monthlyRent"].$lte = parseInt(maxPrice);
-    }
-
-    console.log("🔍 Final Query:", query);
-
-    const properties = await PropertyModel.find(query);
-
-    res.status(200).json({
-      success: true,
-      message: Object.keys(req.query).length 
-        ? "Filtered properties fetched successfully"
-        : "All properties fetched successfully",
-      count: properties.length,
-      properties
-    });
-
-  } catch (error) {
-    console.error("❌ Error fetching properties:", error.message);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-
-
-const getPropertyById = async (req, res) => {
-  try {
-    const {id} =req.params;
-    const property = await PropertyModel.findById(id);
-    if (!property) {
-      return res.status(404).json({ success: false, message: "Property not found" });
-    }
-    res.status(200).json({
-      success: true,
-      property
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-
-
-
-
-const getNumberOfProperties = async (req, res) => {
-  try {
-    const number ="7011769523"
-    res.status(200).json({
-      message: "Number of properties fetched successfully",
-      success: true,
-      number
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: error.message , number });
-  }
-};
-
-const searchProperties = async (req, res) => {
-  try {
-    const { 
-      propertyType, 
-      city, 
-      locality, 
-      minPrice, 
-      maxPrice, 
-      listingType, 
-      bhkType 
-    } = req.query;
-
-    // Build query object dynamically
-    let query = {};
-
-    if (propertyType) query.propertyType = propertyType;
-    if (listingType) query.listingType = listingType;
-    if (bhkType) query["basicDetails.bhkType"] = bhkType;
-
-   
-    if (locality) query["location.locality"] = { $regex: locality, $options: "i" };
-
-    if (minPrice || maxPrice) {
-      query["basicDetails.monthlyRent"] = {};
-      if (minPrice) query["basicDetails.monthlyRent"].$gte = parseInt(minPrice);
-      if (maxPrice) query["basicDetails.monthlyRent"].$lte = parseInt(maxPrice);
-    }
-
-    console.log("🔍 Final Query:", query);
-
-    const properties = await PropertyModel.find(query);
-    console.log(`✅ Found ${properties.length} properties matching criteria.`);
-
-    res.status(200).json({
-      success: true,
-      count: properties.length,
-      properties
-    });
-
-  } catch (error) {
-    console.error("❌ Search Error:", error.message);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-
-
-
-
-module.exports = { upload, addProperty,getAllProperties,getPropertyById,getNumberOfProperties ,searchProperties};
