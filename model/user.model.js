@@ -14,6 +14,12 @@ const UserSchema = new mongoose.Schema(
         ref: "Property"
       }
     ],
+    my_sell_properties: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "SellProperty"
+      }
+    ],
     booking_history: [
       {
         type: mongoose.Schema.Types.ObjectId,

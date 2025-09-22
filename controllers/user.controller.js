@@ -134,7 +134,7 @@ const getUserProfile=async(req,res)=>{
     }
     res.status(200).json({
       message: "User profile retrieved successfully",
-      user: { id: user._id, fullname: user.fullname, phone: user.phone },
+      user: { id: user._id, fullname: user.fullname, phone: user.phone, my_properties: user.my_properties,my_sell_properties: user.my_sell_properties, booking_history:user.booking_history  },
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
