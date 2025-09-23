@@ -391,6 +391,57 @@ const getNumberOfProperties = async (req, res) => {
   }
 };
 
+// const searchProperties = async (req, res) => {
+//   try {
+//     const { 
+//       propertyType, 
+//       city, 
+//       locality, 
+//       minPrice, 
+//       maxPrice, 
+//       listingType, 
+//       bhkType 
+//     } = req.query;
+
+//     // Build query object dynamically
+//     let query = {};
+
+//     if (propertyType) query.propertyType = propertyType;
+//     if (listingType) query.listingType = listingType;
+//     if (bhkType) query["basicDetails.bhkType"] = bhkType;
+
+   
+//     if (locality) query["location.locality"] = { $regex: locality, $options: "i" };
+
+//     if (minPrice || maxPrice) {
+//       query["basicDetails.monthlyRent"] = {};
+//       if (minPrice) query["basicDetails.monthlyRent"].$gte = parseInt(minPrice);
+//       if (maxPrice) query["basicDetails.monthlyRent"].$lte = parseInt(maxPrice);
+//     }
+
+//     console.log("🔍 Final Query:", query);
+
+//     const properties = await PropertyModel.find(query);
+//     console.log(`✅ Found ${properties.length} properties matching criteria.`);
+
+//     res.status(200).json({
+//       success: true,
+//       count: properties.length,
+//       properties
+//     });
+
+//   } catch (error) {
+//     console.error("❌ Search Error:", error.message);
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+
+
+//
+//
 const searchProperties = async (req, res) => {
   try {
     const { 
@@ -400,18 +451,20 @@ const searchProperties = async (req, res) => {
       minPrice, 
       maxPrice, 
       listingType, 
-      bhkType 
+      bhkType,
+      furnishingStatus
     } = req.query;
 
-    // Build query object dynamically
     let query = {};
 
     if (propertyType) query.propertyType = propertyType;
     if (listingType) query.listingType = listingType;
     if (bhkType) query["basicDetails.bhkType"] = bhkType;
 
-   
+    if (furnishingStatus) query["basicDetails.furnishingStatus"] = furnishingStatus;
+
     if (locality) query["location.locality"] = { $regex: locality, $options: "i" };
+    if (city) query["location.city"] = { $regex: city, $options: "i" };
 
     if (minPrice || maxPrice) {
       query["basicDetails.monthlyRent"] = {};
@@ -422,7 +475,7 @@ const searchProperties = async (req, res) => {
     console.log("🔍 Final Query:", query);
 
     const properties = await PropertyModel.find(query);
-    console.log(`✅ Found ${properties.length} properties matching criteria.`);
+    console.log(`Found ${properties.length} properties matching criteria.`);
 
     res.status(200).json({
       success: true,
@@ -431,14 +484,13 @@ const searchProperties = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Search Error:", error.message);
+    console.error(" Search Error:", error.message);
     res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
-
 
 //
 
