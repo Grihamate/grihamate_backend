@@ -1,6 +1,7 @@
 const SellPropertyModel = require("../model/sale.model");
 const multer = require("multer");
 const { uploadFile } = require("../services/imageStorage.service");
+const UserModel = require("../model/user.model");
 
 
 const storage = multer.memoryStorage();
@@ -8,6 +9,168 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 
 // add  sale property 
+// const addSaleProperty = async (req, res) => {
+//   try {
+//     const {
+//       // Core property info
+//       propertyType,
+//       listingType,
+
+//       // Basic Details
+//       title,
+//       area,
+//       carpetArea,
+//       bhkType,
+//       bathrooms,
+//       furnishingStatus,
+//       propertyFacing,
+//       propertyAge,
+//       floor,
+//       transactionType,
+//       price,
+//       priceUnit,
+//       maintenanceCharges,
+//       reraId,
+
+//       // Location
+//       state,
+//       city,
+//       locality,
+//       landmark,
+//       fullAddress,
+//       pincode,
+
+//       // Extra
+//       description,
+
+//       // Contact Info
+//       advisor,
+//       owner,
+//       phone,
+//       email,
+
+//       // Nearby
+//       educationName,
+//       educationDistance,
+//       healthName,
+//       healthDistance,
+//       foodName,
+//       foodDistance,
+//       travelName,
+//       travelDistance,
+
+//       // Floor plan
+//       diningArea,
+//       bedroomArea,
+//       bathroomArea,
+
+//       // Media
+//       virtualTour,
+//       video
+//     } = req.body;
+
+//     // ✅ Handle amenities
+//     let amenities = [];
+//     if (req.body.amenities) {
+//       if (Array.isArray(req.body.amenities)) {
+//         amenities = req.body.amenities;
+//       } else {
+//         amenities = [req.body.amenities];
+//       }
+//     }
+
+//     // ✅ Handle images via ImageKit
+//     let imageObjects = [];
+//     if (req.files?.length) {
+//       const uploadResults = await Promise.all(req.files.map(file => uploadFile(file)));
+//       imageObjects = uploadResults.map(r => ({
+//         url: r.url,
+//         fileId: r.fileId,
+//         name: r.name,
+//       }));
+//     }
+
+//     // ✅ Handle nearby places
+//     const whatsNearby = {
+//       education: educationName && educationDistance ? [{
+//         name: educationName,
+//         distance: parseFloat(educationDistance)
+//       }] : [],
+//       health: healthName && healthDistance ? [{
+//         name: healthName,
+//         distance: parseFloat(healthDistance)
+//       }] : [],
+//       food: foodName && foodDistance ? [{
+//         name: foodName,
+//         distance: parseFloat(foodDistance)
+//       }] : [],
+//       travel: travelName && travelDistance ? [{
+//         name: travelName,
+//         distance: parseFloat(travelDistance)
+//       }] : []
+//     };
+
+//     // ✅ Create property document
+//     const newProperty = new SellPropertyModel({
+//       propertyType: propertyType?.trim(),
+//       listingType: listingType?.trim(),
+//       basicDetails: {
+//         title,
+//         area,
+//         carpetArea,
+//         bhkType,
+//         bathrooms,
+//         furnishingStatus,
+//         propertyFacing,
+//         propertyAge,
+//         floor,
+//         transactionType,
+//         price,
+//         priceUnit,
+//         maintenanceCharges,
+//         reraId,
+//         amenities,
+//       },
+//       location: {
+//         state,
+//         city,
+//         locality,
+//         landmark,
+//         fullAddress,
+//         pincode,
+//       },
+//       description,
+//       images: imageObjects, // ✅ stored in ImageKit
+//       floorPlan: {
+//         diningArea: diningArea ? Number(diningArea) : undefined,
+//         bedroomArea: bedroomArea ? Number(bedroomArea) : undefined,
+//         bathroomArea: bathroomArea ? Number(bathroomArea) : undefined,
+//       },
+//       video,
+//       virtualTour,
+//       whatsNearby,
+//       contactInfo: {
+//         advisor,
+//         owner,
+//         phone,
+//         email,
+//       }
+//     });
+
+//     const savedProperty = await newProperty.save();
+
+//     res.status(201).json({
+//       success: true,
+//       message: "✅ Sale property added successfully",
+//       property: savedProperty
+//     });
+
+//   } catch (error) {
+//     console.error("Error adding sale property:", error);
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+///////
 const addSaleProperty = async (req, res) => {
   try {
     const {
@@ -158,6 +321,17 @@ const addSaleProperty = async (req, res) => {
 
     const savedProperty = await newProperty.save();
 
+    // ➕ Add sale property id into user's my_sell_properties
+    const userId = req.user?._id || req.userId;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID missing" });
+    }
+    await UserModel.findByIdAndUpdate(
+      userId,
+      { $addToSet: { my_sell_properties: savedProperty._id } },
+      { new: true }
+    );
+
     res.status(201).json({
       success: true,
       message: "✅ Sale property added successfully",
@@ -169,6 +343,7 @@ const addSaleProperty = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+//////
 
 
 
