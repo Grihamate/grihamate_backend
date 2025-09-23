@@ -472,10 +472,7 @@ const searchProperties = async (req, res) => {
       if (maxPrice) query["basicDetails.monthlyRent"].$lte = parseInt(maxPrice);
     }
 
-    console.log("🔍 Final Query:", query);
-
     const properties = await PropertyModel.find(query);
-    console.log(`Found ${properties.length} properties matching criteria.`);
 
     res.status(200).json({
       success: true,
@@ -484,7 +481,7 @@ const searchProperties = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(" Search Error:", error.message);
+    console.error(error.message);
     res.status(500).json({
       success: false,
       message: error.message,
