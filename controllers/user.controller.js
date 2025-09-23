@@ -310,6 +310,74 @@ const subscribeNewsletter = async (req, res) => {
 
 
 
+// const bookSite = async (req, res) => {
+//   try {
+//     const COMPANY_EMAIL = process.env.GMAIL_COMPANY;
+
+//     const transporter = nodemailer.createTransport({
+//       service: "gmail",
+//       auth: {
+//         user: process.env.GMAIL_COMPANY,
+//         pass: process.env.GMAIL_PASS,
+//       },
+//     });
+
+//     const userId = req.userId;
+
+//     const user = await UserModel.findById(userId);
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     const { email, fullname, phone } = user;
+//     const message = "A user has expressed interest in scheduling a site visit through the platform.";
+//     // Email to User
+//     const userMailOptions = {
+//       from: COMPANY_EMAIL,
+//       to: email,
+//       subject: "Your Site Visit Appointment is Confirmed!",
+//       html: `
+//         <h2>Dear ${fullname},</h2>
+//         <p>Your site visit appointment has been <strong>successfully confirmed</strong>.</p>
+//         <p>We will send you the exact <strong>date and time</strong> soon.</p>
+//         <p>Thank you for choosing us!</p>
+//         <br/>
+//         <p>Best regards,<br/>Team Grihamate</p>
+//       `,
+//     };
+
+//     const MAIN_EMAIL = process.env.MAIN_GMAIL_COMPANY;
+//     // Email to Company
+//     const companyMailOptions = {
+//       from: COMPANY_EMAIL,
+//       to: MAIN_EMAIL,
+//       subject: "New Site Visit Booking Received",
+//       html: `
+//         <h3>New Site Visit Booking</h3>
+//         <p><b>Name:</b> ${fullname}</p>
+//         <p><b>Email:</b> ${email}</p>
+//         <p><b>Phone:</b> ${phone}</p>
+//         <p><b>Message:</b> ${message}</p>
+//       `,
+//     };
+
+//     await transporter.sendMail(userMailOptions);
+//     await transporter.sendMail(companyMailOptions);
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Site visit confirmed. Emails sent.",
+//     });
+//   } catch (error) {
+//     console.error("Email sending error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Something went wrong while booking the site visit.",
+//        error: error.message 
+//     });
+//   }
+// };
+// Controller
 const bookSite = async (req, res) => {
   try {
     const COMPANY_EMAIL = process.env.GMAIL_COMPANY;
@@ -323,15 +391,24 @@ const bookSite = async (req, res) => {
     });
 
     const userId = req.userId;
-
     const user = await UserModel.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
     const { email, fullname, phone } = user;
+
+    // 🔥 Get propertyId from URL params
+    const propertyId = req.params.propertyId;
+
+    // ✅ Save to user's booking history
+    if (propertyId) {
+      user.booking_history.push(propertyId);
+      await user.save();
+    }
+
     const message = "A user has expressed interest in scheduling a site visit through the platform.";
-    // Email to User
+
     const userMailOptions = {
       from: COMPANY_EMAIL,
       to: email,
@@ -346,17 +423,16 @@ const bookSite = async (req, res) => {
       `,
     };
 
-    const MAIN_EMAIL = process.env.MAIN_GMAIL_COMPANY;
-    // Email to Company
     const companyMailOptions = {
       from: COMPANY_EMAIL,
-      to: MAIN_EMAIL,
+      to: process.env.MAIN_GMAIL_COMPANY,
       subject: "New Site Visit Booking Received",
       html: `
         <h3>New Site Visit Booking</h3>
         <p><b>Name:</b> ${fullname}</p>
         <p><b>Email:</b> ${email}</p>
         <p><b>Phone:</b> ${phone}</p>
+        <p><b>Property ID:</b> ${propertyId}</p>
         <p><b>Message:</b> ${message}</p>
       `,
     };
@@ -366,17 +442,18 @@ const bookSite = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Site visit confirmed. Emails sent.",
+      message: "Site visit confirmed. Emails sent and booking saved.",
     });
   } catch (error) {
     console.error("Email sending error:", error);
     return res.status(500).json({
       success: false,
       message: "Something went wrong while booking the site visit.",
-       error: error.message 
+      error: error.message,
     });
   }
 };
+
 
 
 

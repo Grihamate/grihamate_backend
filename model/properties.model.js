@@ -55,12 +55,18 @@ const propertySchema = new mongoose.Schema({
 ],
 
 
+  // whatsNearby: {
+  //   education: { name: String, distance: Number },
+  //   health: { name: String, distance: Number },
+  //   food: { name: String, distance: Number },
+  //   travel: { name: String, distance: Number },
+  // },
   whatsNearby: {
-    education: { name: String, distance: Number },
-    health: { name: String, distance: Number },
-    food: { name: String, distance: Number },
-    travel: { name: String, distance: Number },
-  },
+      education: [{ name: String, distance: Number }],
+      health: [{ name: String, distance: Number }],
+      food: [{ name: String, distance: Number }],
+      culture: [{ name: String, distance: Number }],
+    },
 
   contactInfo: {
     owner: { type: String, required: true },

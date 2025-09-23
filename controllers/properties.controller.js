@@ -9,7 +9,164 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 
 
- const addProperty = async (req, res) => {
+//  const addProperty = async (req, res) => {
+//   try {
+//     const {
+//       propertyType,
+//       listingType,
+//       title,
+//       area,
+//       bhkType,
+//       bathrooms,
+//       furnishingStatus,
+//       propertyFacing,
+//       propertyAge,
+//       monthlyRent,
+//       securityDeposit,
+//       maintenanceCharges,
+//       city,
+//       locality,
+//       fullAddress,
+//       description,
+//       owner,
+//       phone,
+//       email,
+//       images,
+     
+
+//     } = req.body;
+
+//     let imageObjects = [];
+
+//     // 1️⃣ Handle uploaded files (via Multer + ImageKit)
+//     if (req.files?.length) {
+//       const uploadResults = await Promise.all(
+//         req.files.map(file => uploadFile(file))
+//       );
+//       imageObjects = uploadResults.map(r => ({
+//         url: r.url,
+//         fileId: r.fileId,
+//         name: r.name
+//       }));
+//     }
+
+//     // 2️⃣ Handle image URLs (manual input via form-data or JSON)
+//     if (images) {
+//       let parsedImages = [];
+//       if (Array.isArray(images)) {
+//         parsedImages = images.map(url => ({ url }));
+//       } else if (typeof images === "object") {
+//         parsedImages = Object.values(images).map(url => ({ url }));
+//       } else if (typeof images === "string") {
+//         parsedImages = [{ url: images }];
+//       }
+//       imageObjects = [...imageObjects, ...parsedImages];
+//     }
+
+//     3️⃣ Build whatsNearby from flat fields
+//     const whatsNearby = {
+//       education:
+//         req.body.educationName && req.body.educationDistance
+//           ? {
+//               name: req.body.educationName,
+//               distance: parseFloat(req.body.educationDistance)
+//             }
+//           : undefined,
+
+//       health:
+//         req.body.healthName && req.body.healthDistance
+//           ? {
+//               name: req.body.healthName,
+//               distance: parseFloat(req.body.healthDistance)
+//             }
+//           : undefined,
+
+//       food:
+//         req.body.foodName && req.body.foodDistance
+//           ? {
+//               name: req.body.foodName,
+//               distance: parseFloat(req.body.foodDistance)
+//             }
+//           : undefined,
+
+//       travel:
+//         req.body.travelName && req.body.travelDistance
+//           ? {
+//               name: req.body.travelName,
+//               distance: parseFloat(req.body.travelDistance)
+//             }
+//           : undefined
+//     };
+
+//     Object.keys(whatsNearby).forEach(key => {
+//       if (!whatsNearby[key]) delete whatsNearby[key];
+//     });
+  
+
+//     // 4️⃣ Build property object
+//     const newProperty = new PropertyModel({
+//       propertyType: propertyType?.trim(),
+//       listingType: listingType?.trim(),
+//       basicDetails: {
+//         title: req.body?.basicDetails?.title || title,
+//         area: req.body?.basicDetails?.area || area,
+//         bhkType: req.body?.basicDetails?.bhkType || bhkType,
+//         bathrooms: req.body?.basicDetails?.bathrooms || bathrooms,
+//         furnishingStatus:
+//           req.body?.basicDetails?.furnishingStatus || furnishingStatus,
+//         propertyFacing:
+//           req.body?.basicDetails?.propertyFacing || propertyFacing,
+//         propertyAge: req.body?.basicDetails?.propertyAge || propertyAge,
+//         monthlyRent: req.body?.basicDetails?.monthlyRent || monthlyRent,
+//         securityDeposit:
+//           req.body?.basicDetails?.securityDeposit || securityDeposit,
+//         maintenanceCharges:
+//           req.body?.basicDetails?.maintenanceCharges || maintenanceCharges,
+//         amenities:
+//           req.body?.basicDetails?.amenities || req.body?.amenities || []
+//       },
+//       location: {
+//         city: req.body?.location?.city || city,
+//         locality: req.body?.location?.locality || locality,
+//         fullAddress: req.body?.location?.fullAddress || fullAddress
+//       },
+//       description,
+//       images: imageObjects,
+//       whatsNearby,
+//       contactInfo: {
+//         owner: req.body?.contactInfo?.owner || owner,
+//         phone: req.body?.contactInfo?.phone || phone,
+//         email: req.body?.contactInfo?.email || email
+//       }
+//     });
+
+    
+
+//     // 5️⃣ Save property
+//     const savedProperty = await newProperty.save();
+
+//     // 6️⃣ Push property ID into user's my_properties
+//    await UserModel.findByIdAndUpdate(
+//   req.user._id,
+//   { $push: { my_properties: savedProperty._id } },
+//   { new: true }
+// );
+
+
+
+//     res.status(201).json({
+//       success: true,
+//       message: "✅ Property added successfully",
+//       property: savedProperty
+//     });
+//   } catch (error) {
+//     console.error("❌ Error adding property:", error.message);
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
+////////
+const addProperty = async (req, res) => {
   try {
     const {
       propertyType,
@@ -31,7 +188,15 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
       owner,
       phone,
       email,
-      images
+      images,
+      educationName,
+      educationDistance,
+      healthName,
+      healthDistance,
+      foodName,
+      foodDistance,
+      cultureName,
+      cultureDistance,
     } = req.body;
 
     let imageObjects = [];
@@ -48,7 +213,7 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
       }));
     }
 
-    // 2️⃣ Handle image URLs (manual input via form-data or JSON)
+    // 2
     if (images) {
       let parsedImages = [];
       if (Array.isArray(images)) {
@@ -61,46 +226,27 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
       imageObjects = [...imageObjects, ...parsedImages];
     }
 
-    // 3️⃣ Build whatsNearby from flat fields
+    // 3 Handle whatsNearby 
     const whatsNearby = {
-      education:
-        req.body.educationName && req.body.educationDistance
-          ? {
-              name: req.body.educationName,
-              distance: parseFloat(req.body.educationDistance)
-            }
-          : undefined,
-
-      health:
-        req.body.healthName && req.body.healthDistance
-          ? {
-              name: req.body.healthName,
-              distance: parseFloat(req.body.healthDistance)
-            }
-          : undefined,
-
-      food:
-        req.body.foodName && req.body.foodDistance
-          ? {
-              name: req.body.foodName,
-              distance: parseFloat(req.body.foodDistance)
-            }
-          : undefined,
-
-      travel:
-        req.body.travelName && req.body.travelDistance
-          ? {
-              name: req.body.travelName,
-              distance: parseFloat(req.body.travelDistance)
-            }
-          : undefined
+      education: educationName && educationDistance ? [{
+        name: educationName,
+        distance: parseFloat(educationDistance)
+      }] : [],
+      health: healthName && healthDistance ? [{
+        name: healthName,
+        distance: parseFloat(healthDistance)
+      }] : [],
+      food: foodName && foodDistance ? [{
+        name: foodName,
+        distance: parseFloat(foodDistance)
+      }] : [],
+      culture: cultureName && cultureDistance ? [{
+        name: cultureName,
+        distance: parseFloat(cultureDistance)
+      }] : []
     };
 
-    Object.keys(whatsNearby).forEach(key => {
-      if (!whatsNearby[key]) delete whatsNearby[key];
-    });
-
-    // 4️⃣ Build property object
+    // 4 Build property object
     const newProperty = new PropertyModel({
       propertyType: propertyType?.trim(),
       listingType: listingType?.trim(),
@@ -109,18 +255,13 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
         area: req.body?.basicDetails?.area || area,
         bhkType: req.body?.basicDetails?.bhkType || bhkType,
         bathrooms: req.body?.basicDetails?.bathrooms || bathrooms,
-        furnishingStatus:
-          req.body?.basicDetails?.furnishingStatus || furnishingStatus,
-        propertyFacing:
-          req.body?.basicDetails?.propertyFacing || propertyFacing,
+        furnishingStatus: req.body?.basicDetails?.furnishingStatus || furnishingStatus,
+        propertyFacing: req.body?.basicDetails?.propertyFacing || propertyFacing,
         propertyAge: req.body?.basicDetails?.propertyAge || propertyAge,
         monthlyRent: req.body?.basicDetails?.monthlyRent || monthlyRent,
-        securityDeposit:
-          req.body?.basicDetails?.securityDeposit || securityDeposit,
-        maintenanceCharges:
-          req.body?.basicDetails?.maintenanceCharges || maintenanceCharges,
-        amenities:
-          req.body?.basicDetails?.amenities || req.body?.amenities || []
+        securityDeposit: req.body?.basicDetails?.securityDeposit || securityDeposit,
+        maintenanceCharges: req.body?.basicDetails?.maintenanceCharges || maintenanceCharges,
+        amenities: req.body?.basicDetails?.amenities || req.body?.amenities || []
       },
       location: {
         city: req.body?.location?.city || city,
@@ -137,30 +278,28 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
       }
     });
 
-    
-
     // 5️⃣ Save property
     const savedProperty = await newProperty.save();
 
-    // 6️⃣ Push property ID into user's my_properties
-   await UserModel.findByIdAndUpdate(
-  req.user._id,
-  { $push: { my_properties: savedProperty._id } },
-  { new: true }
-);
-
-
+    // 6️⃣ Add property to user's my_properties list
+    await UserModel.findByIdAndUpdate(
+      req.user?._id || req.userId,
+      { $push: { my_properties: savedProperty._id } },
+      { new: true }
+    );
 
     res.status(201).json({
       success: true,
-      message: "✅ Property added successfully",
+      message: "Property added successfully",
       property: savedProperty
     });
+
   } catch (error) {
-    console.error("❌ Error adding property:", error.message);
+    console.error(" Error adding property:", error.message);
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 ////////
 
