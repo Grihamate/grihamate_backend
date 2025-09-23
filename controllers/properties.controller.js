@@ -440,6 +440,12 @@ const searchProperties = async (req, res) => {
 };
 
 
+//
+
+
+
+
+
 
 
 
