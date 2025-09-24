@@ -490,6 +490,137 @@ const searchProperties = async (req, res) => {
 };
 
 //
+const updateProperty = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      propertyType,
+      listingType,
+      title,
+      area,
+      bhkType,
+      bathrooms,
+      furnishingStatus,
+      propertyFacing,
+      propertyAge,
+      monthlyRent,
+      securityDeposit,
+      maintenanceCharges,
+      city,
+      locality,
+      fullAddress,
+      description,
+      owner,
+      phone,
+      email,
+      educationName,
+      educationDistance,
+      healthName,
+      healthDistance,
+      foodName,
+      foodDistance,
+      cultureName,
+      cultureDistance,
+      images,
+    } = req.body;
+
+    let imageObjects = [];
+
+    // 1 Handle new image
+    if (req.files?.length) {
+      const uploadResults = await Promise.all(
+        req.files.map((file) => uploadFile(file))
+      );
+      imageObjects = uploadResults.map((r) => ({
+        url: r.url,
+        fileId: r.fileId,
+        name: r.name,
+      }));
+    }
+
+    // 2 Handle existing images from frontend 
+    if (images) {
+      let parsedImages = [];
+      if (Array.isArray(images)) {
+        parsedImages = images.map((url) => ({ url }));
+      } else if (typeof images === "string") {
+        parsedImages = [{ url: images }];
+      }
+      imageObjects = [...imageObjects, ...parsedImages];
+    }
+
+    // 3  whatsNearby
+    const whatsNearby = {
+      education: educationName && educationDistance
+        ? [{ name: educationName, distance: parseFloat(educationDistance) }]
+        : [],
+      health: healthName && healthDistance
+        ? [{ name: healthName, distance: parseFloat(healthDistance) }]
+        : [],
+      food: foodName && foodDistance
+        ? [{ name: foodName, distance: parseFloat(foodDistance) }]
+        : [],
+      culture: cultureName && cultureDistance
+        ? [{ name: cultureName, distance: parseFloat(cultureDistance) }]
+        : [],
+    };
+
+    // 4 Prepare update object
+    const updateData = {
+      ...(propertyType && { propertyType }),
+      ...(listingType && { listingType }),
+      ...(description && { description }),
+      ...(imageObjects.length && { images: imageObjects }),
+      whatsNearby,
+      basicDetails: {
+        ...(title && { title }),
+        ...(area && { area }),
+        ...(bhkType && { bhkType }),
+        ...(bathrooms && { bathrooms }),
+        ...(furnishingStatus && { furnishingStatus }),
+        ...(propertyFacing && { propertyFacing }),
+        ...(propertyAge && { propertyAge }),
+        ...(monthlyRent && { monthlyRent }),
+        ...(securityDeposit && { securityDeposit }),
+        ...(maintenanceCharges && { maintenanceCharges }),
+      },
+      location: {
+        ...(city && { city }),
+        ...(locality && { locality }),
+        ...(fullAddress && { fullAddress }),
+      },
+      contactInfo: {
+        ...(owner && { owner }),
+        ...(phone && { phone }),
+        ...(email && { email }),
+      },
+    };
+
+    // 5 Update in DB
+    const updatedProperty = await PropertyModel.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    );
+
+    if (!updatedProperty) {
+      return res.status(404).json({
+        success: false,
+        message: "Property not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: " Property updated successfully",
+      property: updatedProperty,
+    });
+  } catch (error) {
+    console.error("Error updating property:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 
 
@@ -498,7 +629,8 @@ const searchProperties = async (req, res) => {
 
 
 
-module.exports = { upload, addProperty,getAllProperties,getPropertyById,getNumberOfProperties ,searchProperties};
+
+module.exports = { upload, addProperty,getAllProperties,getPropertyById,getNumberOfProperties ,searchProperties,updateProperty};
 
 
 

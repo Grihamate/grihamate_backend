@@ -8,7 +8,8 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 
-// add  sale property 
+
+
 // const addSaleProperty = async (req, res) => {
 //   try {
 //     const {
@@ -63,13 +64,9 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 //       diningArea,
 //       bedroomArea,
 //       bathroomArea,
-
-//       // Media
-//       virtualTour,
-//       video
 //     } = req.body;
 
-//     // ✅ Handle amenities
+//     // ✅ Handle amenities array
 //     let amenities = [];
 //     if (req.body.amenities) {
 //       if (Array.isArray(req.body.amenities)) {
@@ -79,38 +76,49 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 //       }
 //     }
 
-//     // ✅ Handle images via ImageKit
+//     //  Handle images and virtual tour
 //     let imageObjects = [];
-//     if (req.files?.length) {
-//       const uploadResults = await Promise.all(req.files.map(file => uploadFile(file)));
-//       imageObjects = uploadResults.map(r => ({
+//     let virtualTourUrl = null;
+
+//     // Upload images 
+//     if (req.files?.images && req.files.images.length > 0) {
+//       const uploadResults = await Promise.all(
+//         req.files.images.map((file) => uploadFile(file))
+//       );
+//       imageObjects = uploadResults.map((r) => ({
 //         url: r.url,
 //         fileId: r.fileId,
 //         name: r.name,
 //       }));
 //     }
 
-//     // ✅ Handle nearby places
+  
+//    // Upload video (single) for virtual tour
+// if (req.files?.virtualTour && req.files.virtualTour.length > 0) {
+//   const uploadedVideo = await uploadFile(req.files.virtualTour[0]);
+//   virtualTourUrl = uploadedVideo.url;
+// }
+
 //     const whatsNearby = {
-//       education: educationName && educationDistance ? [{
-//         name: educationName,
-//         distance: parseFloat(educationDistance)
-//       }] : [],
-//       health: healthName && healthDistance ? [{
-//         name: healthName,
-//         distance: parseFloat(healthDistance)
-//       }] : [],
-//       food: foodName && foodDistance ? [{
-//         name: foodName,
-//         distance: parseFloat(foodDistance)
-//       }] : [],
-//       travel: travelName && travelDistance ? [{
-//         name: travelName,
-//         distance: parseFloat(travelDistance)
-//       }] : []
+//       education:
+//         educationName && educationDistance
+//           ? [{ name: educationName, distance: parseFloat(educationDistance) }]
+//           : [],
+//       health:
+//         healthName && healthDistance
+//           ? [{ name: healthName, distance: parseFloat(healthDistance) }]
+//           : [],
+//       food:
+//         foodName && foodDistance
+//           ? [{ name: foodName, distance: parseFloat(foodDistance) }]
+//           : [],
+//       travel:
+//         travelName && travelDistance
+//           ? [{ name: travelName, distance: parseFloat(travelDistance) }]
+//           : [],
 //     };
 
-//     // ✅ Create property document
+//     //  Create property document
 //     const newProperty = new SellPropertyModel({
 //       propertyType: propertyType?.trim(),
 //       listingType: listingType?.trim(),
@@ -140,188 +148,26 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 //         pincode,
 //       },
 //       description,
-//       images: imageObjects, // ✅ stored in ImageKit
+//       images: imageObjects,
+//       virtualTour: virtualTourUrl, 
 //       floorPlan: {
 //         diningArea: diningArea ? Number(diningArea) : undefined,
 //         bedroomArea: bedroomArea ? Number(bedroomArea) : undefined,
 //         bathroomArea: bathroomArea ? Number(bathroomArea) : undefined,
 //       },
-//       video,
-//       virtualTour,
 //       whatsNearby,
 //       contactInfo: {
 //         advisor,
 //         owner,
 //         phone,
 //         email,
-//       }
+//       },
 //     });
 
+//     // Save property to DB
 //     const savedProperty = await newProperty.save();
 
-//     res.status(201).json({
-//       success: true,
-//       message: "✅ Sale property added successfully",
-//       property: savedProperty
-//     });
-
-//   } catch (error) {
-//     console.error("Error adding sale property:", error);
-//     res.status(500).json({ success: false, message: error.message });
-//   }
-// };
-///////
-// const addSaleProperty = async (req, res) => {
-//   try {
-//     const {
-//       // Core property info
-//       propertyType,
-//       listingType,
-
-//       // Basic Details
-//       title,
-//       area,
-//       carpetArea,
-//       bhkType,
-//       bathrooms,
-//       furnishingStatus,
-//       propertyFacing,
-//       propertyAge,
-//       floor,
-//       transactionType,
-//       price,
-//       priceUnit,
-//       maintenanceCharges,
-//       reraId,
-
-//       // Location
-//       state,
-//       city,
-//       locality,
-//       landmark,
-//       fullAddress,
-//       pincode,
-
-//       // Extra
-//       description,
-
-//       // Contact Info
-//       advisor,
-//       owner,
-//       phone,
-//       email,
-
-//       // Nearby
-//       educationName,
-//       educationDistance,
-//       healthName,
-//       healthDistance,
-//       foodName,
-//       foodDistance,
-//       travelName,
-//       travelDistance,
-
-//       // Floor plan
-//       diningArea,
-//       bedroomArea,
-//       bathroomArea,
-
-//       // Media
-//       virtualTour,
-//       video
-//     } = req.body;
-
-//     // ✅ Handle amenities
-//     let amenities = [];
-//     if (req.body.amenities) {
-//       if (Array.isArray(req.body.amenities)) {
-//         amenities = req.body.amenities;
-//       } else {
-//         amenities = [req.body.amenities];
-//       }
-//     }
-
-//     // ✅ Handle images via ImageKit
-//     let imageObjects = [];
-//     if (req.files?.length) {
-//       const uploadResults = await Promise.all(req.files.map(file => uploadFile(file)));
-//       imageObjects = uploadResults.map(r => ({
-//         url: r.url,
-//         fileId: r.fileId,
-//         name: r.name,
-//       }));
-//     }
-
-//     // ✅ Handle nearby places
-//     const whatsNearby = {
-//       education: educationName && educationDistance ? [{
-//         name: educationName,
-//         distance: parseFloat(educationDistance)
-//       }] : [],
-//       health: healthName && healthDistance ? [{
-//         name: healthName,
-//         distance: parseFloat(healthDistance)
-//       }] : [],
-//       food: foodName && foodDistance ? [{
-//         name: foodName,
-//         distance: parseFloat(foodDistance)
-//       }] : [],
-//       travel: travelName && travelDistance ? [{
-//         name: travelName,
-//         distance: parseFloat(travelDistance)
-//       }] : []
-//     };
-
-//     // ✅ Create property document
-//     const newProperty = new SellPropertyModel({
-//       propertyType: propertyType?.trim(),
-//       listingType: listingType?.trim(),
-//       basicDetails: {
-//         title,
-//         area,
-//         carpetArea,
-//         bhkType,
-//         bathrooms,
-//         furnishingStatus,
-//         propertyFacing,
-//         propertyAge,
-//         floor,
-//         transactionType,
-//         price,
-//         priceUnit,
-//         maintenanceCharges,
-//         reraId,
-//         amenities,
-//       },
-//       location: {
-//         state,
-//         city,
-//         locality,
-//         landmark,
-//         fullAddress,
-//         pincode,
-//       },
-//       description,
-//       images: imageObjects, // ✅ stored in ImageKit
-//       floorPlan: {
-//         diningArea: diningArea ? Number(diningArea) : undefined,
-//         bedroomArea: bedroomArea ? Number(bedroomArea) : undefined,
-//         bathroomArea: bathroomArea ? Number(bathroomArea) : undefined,
-//       },
-//       video,
-//       virtualTour,
-//       whatsNearby,
-//       contactInfo: {
-//         advisor,
-//         owner,
-//         phone,
-//         email,
-//       }
-//     });
-
-//     const savedProperty = await newProperty.save();
-
-//     // ➕ Add sale property id into user's my_sell_properties
+//     // Add property ID to user's my_sell_properties array
 //     const userId = req.user?._id || req.userId;
 //     if (!userId) {
 //       return res.status(400).json({ success: false, message: "User ID missing" });
@@ -332,19 +178,18 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 //       { new: true }
 //     );
 
+//     // Success response
 //     res.status(201).json({
 //       success: true,
-//       message: "✅ Sale property added successfully",
-//       property: savedProperty
+//       message: " Sale property added successfully",
+//       property: savedProperty,
 //     });
-
 //   } catch (error) {
 //     console.error("Error adding sale property:", error);
 //     res.status(500).json({ success: false, message: error.message });
 //   }
 // };
-//////
-///
+//////////////
 const addSaleProperty = async (req, res) => {
   try {
     const {
@@ -367,6 +212,7 @@ const addSaleProperty = async (req, res) => {
       priceUnit,
       maintenanceCharges,
       reraId,
+      propertyStatus, // ✅ NEW FIELD
 
       // Location
       state,
@@ -411,7 +257,7 @@ const addSaleProperty = async (req, res) => {
       }
     }
 
-    //  Handle images and virtual tour
+    // ✅ Handle images and virtual tour
     let imageObjects = [];
     let virtualTourUrl = null;
 
@@ -427,13 +273,13 @@ const addSaleProperty = async (req, res) => {
       }));
     }
 
-  
-   // Upload video (single) for virtual tour
-if (req.files?.virtualTour && req.files.virtualTour.length > 0) {
-  const uploadedVideo = await uploadFile(req.files.virtualTour[0]);
-  virtualTourUrl = uploadedVideo.url;
-}
+    // Upload virtual tour video (single)
+    if (req.files?.virtualTour && req.files.virtualTour.length > 0) {
+      const uploadedVideo = await uploadFile(req.files.virtualTour[0]);
+      virtualTourUrl = uploadedVideo.url;
+    }
 
+    // ✅ Build "What's Nearby" object
     const whatsNearby = {
       education:
         educationName && educationDistance
@@ -453,7 +299,7 @@ if (req.files?.virtualTour && req.files.virtualTour.length > 0) {
           : [],
     };
 
-    //  Create property document
+    // ✅ Create property document
     const newProperty = new SellPropertyModel({
       propertyType: propertyType?.trim(),
       listingType: listingType?.trim(),
@@ -473,6 +319,7 @@ if (req.files?.virtualTour && req.files.virtualTour.length > 0) {
         maintenanceCharges,
         reraId,
         amenities,
+        propertyStatus, // ✅ INCLUDED HERE
       },
       location: {
         state,
@@ -484,7 +331,7 @@ if (req.files?.virtualTour && req.files.virtualTour.length > 0) {
       },
       description,
       images: imageObjects,
-      virtualTour: virtualTourUrl, 
+      virtualTour: virtualTourUrl,
       floorPlan: {
         diningArea: diningArea ? Number(diningArea) : undefined,
         bedroomArea: bedroomArea ? Number(bedroomArea) : undefined,
@@ -499,24 +346,25 @@ if (req.files?.virtualTour && req.files.virtualTour.length > 0) {
       },
     });
 
-    // Save property to DB
+    // ✅ Save to DB
     const savedProperty = await newProperty.save();
 
-    // Add property ID to user's my_sell_properties array
+    // ✅ Add to user's property list
     const userId = req.user?._id || req.userId;
     if (!userId) {
       return res.status(400).json({ success: false, message: "User ID missing" });
     }
+
     await UserModel.findByIdAndUpdate(
       userId,
       { $addToSet: { my_sell_properties: savedProperty._id } },
       { new: true }
     );
 
-    // Success response
+    // ✅ Success response
     res.status(201).json({
       success: true,
-      message: " Sale property added successfully",
+      message: "Sale property added successfully",
       property: savedProperty,
     });
   } catch (error) {
@@ -525,41 +373,128 @@ if (req.files?.virtualTour && req.files.virtualTour.length > 0) {
   }
 };
 
-///
+
+//////////////
 
 
 
 
-// get all sale property
+
+
+//get all sale property
+// const getAllSaleProperties = async (req, res) => {
+//   try {
+//     const { 
+//       propertyType, 
+//       city, 
+//       locality, 
+//       minPrice, 
+//       maxPrice, 
+//       listingType, 
+//       bhkType 
+//     } = req.query;
+
+//     let query = {};
+
+//     if (propertyType) query.propertyType = propertyType;
+//     if (listingType) query.listingType = listingType;
+//     if (bhkType) query["basicDetails.bhkType"] = bhkType;
+//     if (city) query["location.city"] = { $regex: city, $options: "i" };
+//     if (locality) query["location.locality"] = { $regex: locality, $options: "i" };
+
+//     if (minPrice || maxPrice) {
+//       query["basicDetails.price"] = {}; // <-- changed from monthlyRent to price
+//       if (minPrice) query["basicDetails.price"].$gte = parseInt(minPrice);
+//       if (maxPrice) query["basicDetails.price"].$lte = parseInt(maxPrice);
+//     }
+
+//     console.log("🔍 Final Query:", query);
+
+//     const properties = await SellPropertyModel.find(query); // <-- use correct model here
+
+//     res.status(200).json({
+//       success: true,
+//       message: Object.keys(req.query).length 
+//         ? "Filtered properties fetched successfully"
+//         : "All properties fetched successfully",
+//       count: properties.length,
+//       properties
+//     });
+
+//   } catch (error) {
+//     console.error("Error fetching properties:", error.message);
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+//////////////
 const getAllSaleProperties = async (req, res) => {
   try {
     const { 
-      propertyType, 
-      city, 
-      locality, 
-      minPrice, 
-      maxPrice, 
-      listingType, 
-      bhkType 
+      propertyType,
+      city,
+      locality,
+      minPrice,
+      maxPrice,
+      minArea,
+      maxArea,
+      listingType,
+      bhkType,
+      amenities,
+      propertyStatus,
+      facing,
+      ageOfProperty
     } = req.query;
 
     let query = {};
 
+    // Basic filters
     if (propertyType) query.propertyType = propertyType;
     if (listingType) query.listingType = listingType;
     if (bhkType) query["basicDetails.bhkType"] = bhkType;
     if (city) query["location.city"] = { $regex: city, $options: "i" };
     if (locality) query["location.locality"] = { $regex: locality, $options: "i" };
 
+    // Price range
     if (minPrice || maxPrice) {
-      query["basicDetails.price"] = {}; // <-- changed from monthlyRent to price
+      query["basicDetails.price"] = {};
       if (minPrice) query["basicDetails.price"].$gte = parseInt(minPrice);
       if (maxPrice) query["basicDetails.price"].$lte = parseInt(maxPrice);
     }
 
+    // Area / Size filter
+    if (minArea || maxArea) {
+      query["basicDetails.area"] = {};
+      if (minArea) query["basicDetails.area"].$gte = parseInt(minArea);
+      if (maxArea) query["basicDetails.area"].$lte = parseInt(maxArea);
+    }
+
+    // Amenities (expecting comma-separated list)
+   if (amenities) {
+  const amenityList = amenities.split(",");
+  query["basicDetails.amenities"] = { $all: amenityList };
+}
+
+    // Property Status
+    if (propertyStatus) {
+  query["basicDetails.propertyStatus"] = propertyStatus;
+}
+
+    // Facing
+     if (facing) {
+      query["basicDetails.propertyFacing"] = facing;
+    }
+
+    // Age of Property
+   if (ageOfProperty) {
+      query["basicDetails.propertyAge"] = ageOfProperty;
+    }
+
     console.log("🔍 Final Query:", query);
 
-    const properties = await SellPropertyModel.find(query); // <-- use correct model here
+    const properties = await SellPropertyModel.find(query);
 
     res.status(200).json({
       success: true,
@@ -571,13 +506,17 @@ const getAllSaleProperties = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error fetching properties:", error.message);
+    console.error("❌ Error fetching properties:", error.message);
     res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
+
+/////////////
+
+
 
 //get sale property by id
 const getSalePropertyById = async (req, res) => {

@@ -36,6 +36,7 @@ const sellPropertySchema = new mongoose.Schema(
       maintenanceCharges: { type: Number },
       reraId: { type: String }, // RERA ID
       amenities: [{ type: String }], // e.g., ["Lift", "Parking", "Gym"]
+      propertyStatus: { type: String, required: true }
     },
     location: {
       state: { type: String, required: true },
