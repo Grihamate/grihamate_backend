@@ -375,6 +375,42 @@ const getPropertyById = async (req, res) => {
 
 
 
+const getPropertiesByIds = async (req, res) => {
+  try {
+    const { ids } = req.body; // expecting array of ids in request body
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide an array of property IDs",
+      });
+    }
+
+    const properties = await PropertyModel.find({
+      _id: { $in: ids }, // find all properties whose _id is in the array
+    });
+
+    if (!properties || properties.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No properties found for the given IDs",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      count: properties.length,
+      properties,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+
 
 
 const getNumberOfProperties = async (req, res) => {
@@ -630,7 +666,7 @@ const updateProperty = async (req, res) => {
 
 
 
-module.exports = { upload, addProperty,getAllProperties,getPropertyById,getNumberOfProperties ,searchProperties,updateProperty};
+module.exports = { upload, addProperty,getAllProperties,getPropertyById,getPropertiesByIds,getNumberOfProperties ,searchProperties,updateProperty};
 
 
 

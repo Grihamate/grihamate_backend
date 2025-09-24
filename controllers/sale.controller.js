@@ -537,6 +537,44 @@ const getSalePropertyById = async (req, res) => {
 };
 
 
+const getSalePropertiesByIds = async (req, res) => {
+  try {
+    const { ids } = req.body; // expecting array of sale property IDs
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide an array of sale property IDs",
+      });
+    }
+
+    const saleProperties = await SellPropertyModel.find({
+      _id: { $in: ids },
+    });
+
+    if (!saleProperties || saleProperties.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No Sale Properties found for the given IDs",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      count: saleProperties.length,
+      saleProperties,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+
+
+
 //get property owner number
 
 const getPropertyOwnerNumber = async (req, res) => {
@@ -604,4 +642,4 @@ const searchSaleProperties = async (req, res) => {
 
 
 
-module.exports = { upload, addSaleProperty,getAllSaleProperties,getSalePropertyById,getPropertyOwnerNumber,searchSaleProperties };
+module.exports = { upload, addSaleProperty,getAllSaleProperties,getSalePropertyById,getSalePropertiesByIds,getPropertyOwnerNumber,searchSaleProperties };

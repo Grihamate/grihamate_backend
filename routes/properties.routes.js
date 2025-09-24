@@ -10,7 +10,7 @@ router.get("/get_number", authMiddleware,propertiesController.getNumberOfPropert
 router.get("/search",authMiddleware , propertiesController.searchProperties);
 router.get("/:id",authMiddleware ,propertiesController.getPropertyById);
 router.put("/update/:id", authMiddleware, propertiesController.upload.array("images", 10),propertiesController.updateProperty);
-
+router.post("/getbyids", authMiddleware,propertiesController.getPropertiesByIds)
 
 
 

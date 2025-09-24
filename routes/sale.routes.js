@@ -23,6 +23,6 @@ router.get("/all", saleController.getAllSaleProperties);
 router.get("/get_number",authMiddleware, saleController.getPropertyOwnerNumber);
 router.get("/search",authMiddleware , saleController.searchSaleProperties);
 router.get("/:id",authMiddleware, saleController.getSalePropertyById);
-
+router.post("/getbyids", authMiddleware, saleController.getSalePropertiesByIds);
 
 module.exports = router;
