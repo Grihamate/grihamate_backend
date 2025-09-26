@@ -165,7 +165,152 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 //   }
 // };
 
+
+
+
+
+// const addProperty = async (req, res) => {
+//   try {
+//     const {
+//       propertyType,
+//       listingType,
+//       title,
+//       area,
+//       bhkType,
+//       bathrooms,
+//       furnishingStatus,
+//       propertyFacing,
+//       propertyAge,
+//       monthlyRent,
+//       securityDeposit,
+//       maintenanceCharges,
+//       city,
+//       locality,
+//       fullAddress,
+//       description,
+//       owner,
+//       phone,
+//       email,
+//       images,
+//       educationName,
+//       educationDistance,
+//       healthName,
+//       healthDistance,
+//       foodName,
+//       foodDistance,
+//       cultureName,
+//       cultureDistance,
+//     } = req.body;
+
+//     let imageObjects = [];
+
+//     // 1️⃣ Handle uploaded files (via Multer + ImageKit)
+//     if (req.files?.length) {
+//       const uploadResults = await Promise.all(
+//         req.files.map(file => uploadFile(file))
+//       );
+//       imageObjects = uploadResults.map(r => ({
+//         url: r.url,
+//         fileId: r.fileId,
+//         name: r.name
+//       }));
+//     }
+
+//     // 2
+//     if (images) {
+//       let parsedImages = [];
+//       if (Array.isArray(images)) {
+//         parsedImages = images.map(url => ({ url }));
+//       } else if (typeof images === "object") {
+//         parsedImages = Object.values(images).map(url => ({ url }));
+//       } else if (typeof images === "string") {
+//         parsedImages = [{ url: images }];
+//       }
+//       imageObjects = [...imageObjects, ...parsedImages];
+//     }
+
+//     // 3 Handle whatsNearby 
+//     const whatsNearby = {
+//       education: educationName && educationDistance ? [{
+//         name: educationName,
+//         distance: parseFloat(educationDistance)
+//       }] : [],
+//       health: healthName && healthDistance ? [{
+//         name: healthName,
+//         distance: parseFloat(healthDistance)
+//       }] : [],
+//       food: foodName && foodDistance ? [{
+//         name: foodName,
+//         distance: parseFloat(foodDistance)
+//       }] : [],
+//       culture: cultureName && cultureDistance ? [{
+//         name: cultureName,
+//         distance: parseFloat(cultureDistance)
+//       }] : []
+//     };
+
+//     // 4 Build property object
+//     const newProperty = new PropertyModel({
+//       propertyType: propertyType?.trim(),
+//       listingType: listingType?.trim(),
+//       basicDetails: {
+//         title: req.body?.basicDetails?.title || title,
+//         area: req.body?.basicDetails?.area || area,
+//         bhkType: req.body?.basicDetails?.bhkType || bhkType,
+//         bathrooms: req.body?.basicDetails?.bathrooms || bathrooms,
+//         furnishingStatus: req.body?.basicDetails?.furnishingStatus || furnishingStatus,
+//         propertyFacing: req.body?.basicDetails?.propertyFacing || propertyFacing,
+//         propertyAge: req.body?.basicDetails?.propertyAge || propertyAge,
+//         monthlyRent: req.body?.basicDetails?.monthlyRent || monthlyRent,
+//         securityDeposit: req.body?.basicDetails?.securityDeposit || securityDeposit,
+//         maintenanceCharges: req.body?.basicDetails?.maintenanceCharges || maintenanceCharges,
+//         amenities: req.body?.basicDetails?.amenities || req.body?.amenities || []
+//       },
+//       location: {
+//         city: req.body?.location?.city || city,
+//         locality: req.body?.location?.locality || locality,
+//         fullAddress: req.body?.location?.fullAddress || fullAddress
+//       },
+//       description,
+//       images: imageObjects,
+//       whatsNearby,
+//       contactInfo: {
+//         owner: req.body?.contactInfo?.owner || owner,
+//         phone: req.body?.contactInfo?.phone || phone,
+//         email: req.body?.contactInfo?.email || email
+//       }
+//     });
+
+//     // 5️⃣ Save property
+//     const savedProperty = await newProperty.save();
+
+//     // 6️⃣ Add property to user's my_properties list
+//     await UserModel.findByIdAndUpdate(
+//       req.user?._id || req.userId,
+//       { $push: { my_properties: savedProperty._id } },
+//       { new: true }
+//     );
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Property added successfully",
+//       property: savedProperty
+//     });
+
+//   } catch (error) {
+//     console.error(" Error adding property:", error.message);
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
+
+
+
 ////////
+
+
+
+
 const addProperty = async (req, res) => {
   try {
     const {
@@ -204,29 +349,47 @@ const addProperty = async (req, res) => {
     // 1️⃣ Handle uploaded files (via Multer + ImageKit)
     if (req.files?.length) {
       const uploadResults = await Promise.all(
-        req.files.map(file => uploadFile(file))
+        req.files.map(file => uploadFile(file))  // your uploadFile handles buffer/file
       );
-      imageObjects = uploadResults.map(r => ({
+      imageObjects.push(...uploadResults.map(r => ({
         url: r.url,
         fileId: r.fileId,
         name: r.name
-      }));
+      })));
     }
 
-    // 2
+    // 2️⃣ Handle images coming from req.body (string | array | object)
     if (images) {
       let parsedImages = [];
+
       if (Array.isArray(images)) {
-        parsedImages = images.map(url => ({ url }));
+        parsedImages = images;
       } else if (typeof images === "object") {
-        parsedImages = Object.values(images).map(url => ({ url }));
+        parsedImages = Object.values(images);
       } else if (typeof images === "string") {
-        parsedImages = [{ url: images }];
+        parsedImages = [images];
       }
-      imageObjects = [...imageObjects, ...parsedImages];
+
+      // Upload each image (if it's base64 or file path) to ImageKit
+      const uploadResults = await Promise.all(
+        parsedImages.map(async (img) => {
+          // Case 1: Already a URL (http/https) → don’t upload, just store
+          if (typeof img === "string" && img.startsWith("http")) {
+            return { url: img, fileId: null, name: "external-url" };
+          }
+          // Case 2: Base64 or file → upload to ImageKit
+          return await uploadFile(img);
+        })
+      );
+
+      imageObjects.push(...uploadResults.map(r => ({
+        url: r.url,
+        fileId: r.fileId,
+        name: r.name
+      })));
     }
 
-    // 3 Handle whatsNearby 
+    // 3️⃣ Handle whatsNearby 
     const whatsNearby = {
       education: educationName && educationDistance ? [{
         name: educationName,
@@ -246,7 +409,7 @@ const addProperty = async (req, res) => {
       }] : []
     };
 
-    // 4 Build property object
+    // 4️⃣ Build property object
     const newProperty = new PropertyModel({
       propertyType: propertyType?.trim(),
       listingType: listingType?.trim(),
@@ -295,13 +458,15 @@ const addProperty = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(" Error adding property:", error.message);
+    console.error("❌ Error adding property:", error.message);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
 
-////////
+
+
+
 
 
 
