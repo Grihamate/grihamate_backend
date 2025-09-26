@@ -10,6 +10,7 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 
 
+//////////////
 // const addSaleProperty = async (req, res) => {
 //   try {
 //     const {
@@ -32,6 +33,7 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 //       priceUnit,
 //       maintenanceCharges,
 //       reraId,
+//       propertyStatus, // ✅ NEW FIELD
 
 //       // Location
 //       state,
@@ -76,7 +78,7 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 //       }
 //     }
 
-//     //  Handle images and virtual tour
+//     // ✅ Handle images and virtual tour
 //     let imageObjects = [];
 //     let virtualTourUrl = null;
 
@@ -92,13 +94,13 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 //       }));
 //     }
 
-  
-//    // Upload video (single) for virtual tour
-// if (req.files?.virtualTour && req.files.virtualTour.length > 0) {
-//   const uploadedVideo = await uploadFile(req.files.virtualTour[0]);
-//   virtualTourUrl = uploadedVideo.url;
-// }
+//     // Upload virtual tour video (single)
+//     if (req.files?.virtualTour && req.files.virtualTour.length > 0) {
+//       const uploadedVideo = await uploadFile(req.files.virtualTour[0]);
+//       virtualTourUrl = uploadedVideo.url;
+//     }
 
+//     // ✅ Build "What's Nearby" object
 //     const whatsNearby = {
 //       education:
 //         educationName && educationDistance
@@ -118,7 +120,7 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 //           : [],
 //     };
 
-//     //  Create property document
+//     // ✅ Create property document
 //     const newProperty = new SellPropertyModel({
 //       propertyType: propertyType?.trim(),
 //       listingType: listingType?.trim(),
@@ -138,6 +140,7 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 //         maintenanceCharges,
 //         reraId,
 //         amenities,
+//         propertyStatus, // ✅ INCLUDED HERE
 //       },
 //       location: {
 //         state,
@@ -149,7 +152,7 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 //       },
 //       description,
 //       images: imageObjects,
-//       virtualTour: virtualTourUrl, 
+//       virtualTour: virtualTourUrl,
 //       floorPlan: {
 //         diningArea: diningArea ? Number(diningArea) : undefined,
 //         bedroomArea: bedroomArea ? Number(bedroomArea) : undefined,
@@ -164,24 +167,25 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 //       },
 //     });
 
-//     // Save property to DB
+//     // ✅ Save to DB
 //     const savedProperty = await newProperty.save();
 
-//     // Add property ID to user's my_sell_properties array
+//     // ✅ Add to user's property list
 //     const userId = req.user?._id || req.userId;
 //     if (!userId) {
 //       return res.status(400).json({ success: false, message: "User ID missing" });
 //     }
+
 //     await UserModel.findByIdAndUpdate(
 //       userId,
 //       { $addToSet: { my_sell_properties: savedProperty._id } },
 //       { new: true }
 //     );
 
-//     // Success response
+//     // ✅ Success response
 //     res.status(201).json({
 //       success: true,
-//       message: " Sale property added successfully",
+//       message: "Sale property added successfully",
 //       property: savedProperty,
 //     });
 //   } catch (error) {
@@ -189,7 +193,8 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 //     res.status(500).json({ success: false, message: error.message });
 //   }
 // };
-//////////////
+
+
 const addSaleProperty = async (req, res) => {
   try {
     const {
@@ -212,7 +217,7 @@ const addSaleProperty = async (req, res) => {
       priceUnit,
       maintenanceCharges,
       reraId,
-      propertyStatus, // ✅ NEW FIELD
+      propertyStatus,
 
       // Location
       state,
@@ -245,9 +250,12 @@ const addSaleProperty = async (req, res) => {
       diningArea,
       bedroomArea,
       bathroomArea,
+
+      // Images (optional from body)
+      images,
     } = req.body;
 
-    // ✅ Handle amenities array
+    // ✅ Handle amenities
     let amenities = [];
     if (req.body.amenities) {
       if (Array.isArray(req.body.amenities)) {
@@ -257,11 +265,10 @@ const addSaleProperty = async (req, res) => {
       }
     }
 
-    // ✅ Handle images and virtual tour
+    // ✅ Handle images
     let imageObjects = [];
-    let virtualTourUrl = null;
 
-    // Upload images 
+    // 1️⃣ Multer uploaded images
     if (req.files?.images && req.files.images.length > 0) {
       const uploadResults = await Promise.all(
         req.files.images.map((file) => uploadFile(file))
@@ -273,13 +280,44 @@ const addSaleProperty = async (req, res) => {
       }));
     }
 
-    // Upload virtual tour video (single)
+    // 2️⃣ Images passed in body
+    if (images) {
+      let parsedImages = [];
+
+      if (Array.isArray(images)) {
+        parsedImages = images;
+      } else if (typeof images === "object") {
+        parsedImages = Object.values(images);
+      } else if (typeof images === "string") {
+        parsedImages = [images];
+      }
+
+      const uploadResults = await Promise.all(
+        parsedImages.map(async (img) => {
+          if (typeof img === "string" && img.startsWith("http")) {
+            return { url: img, fileId: null, name: "external-url" };
+          }
+          return await uploadFile(img);
+        })
+      );
+
+      imageObjects.push(
+        ...uploadResults.map((r) => ({
+          url: r.url,
+          fileId: r.fileId,
+          name: r.name,
+        }))
+      );
+    }
+
+    // ✅ Handle virtual tour
+    let virtualTourUrl = null;
     if (req.files?.virtualTour && req.files.virtualTour.length > 0) {
       const uploadedVideo = await uploadFile(req.files.virtualTour[0]);
       virtualTourUrl = uploadedVideo.url;
     }
 
-    // ✅ Build "What's Nearby" object
+    // ✅ What's Nearby
     const whatsNearby = {
       education:
         educationName && educationDistance
@@ -299,7 +337,7 @@ const addSaleProperty = async (req, res) => {
           : [],
     };
 
-    // ✅ Create property document
+    // ✅ Create property doc
     const newProperty = new SellPropertyModel({
       propertyType: propertyType?.trim(),
       listingType: listingType?.trim(),
@@ -319,7 +357,7 @@ const addSaleProperty = async (req, res) => {
         maintenanceCharges,
         reraId,
         amenities,
-        propertyStatus, // ✅ INCLUDED HERE
+        propertyStatus,
       },
       location: {
         state,
@@ -349,10 +387,12 @@ const addSaleProperty = async (req, res) => {
     // ✅ Save to DB
     const savedProperty = await newProperty.save();
 
-    // ✅ Add to user's property list
+    // ✅ Add to user’s list
     const userId = req.user?._id || req.userId;
     if (!userId) {
-      return res.status(400).json({ success: false, message: "User ID missing" });
+      return res
+        .status(400)
+        .json({ success: false, message: "User ID missing" });
     }
 
     await UserModel.findByIdAndUpdate(
@@ -361,7 +401,6 @@ const addSaleProperty = async (req, res) => {
       { new: true }
     );
 
-    // ✅ Success response
     res.status(201).json({
       success: true,
       message: "Sale property added successfully",
@@ -372,6 +411,7 @@ const addSaleProperty = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 
 //////////////
