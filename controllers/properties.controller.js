@@ -314,7 +314,8 @@ const getAllProperties= async (req, res) => {
       minPrice, 
       maxPrice, 
       listingType, 
-      bhkType 
+      bhkType,
+      furnishingStatus
     } = req.query;
 
     // Build query object dynamically
@@ -325,6 +326,7 @@ const getAllProperties= async (req, res) => {
     if (bhkType) query["basicDetails.bhkType"] = bhkType;
     if (city) query["location.city"] = { $regex: city, $options: "i" };
     if (locality) query["location.locality"] = { $regex: locality, $options: "i" };
+     if (furnishingStatus) query["basicDetails.furnishingStatus"] = furnishingStatus;
 
     if (minPrice || maxPrice) {
       query["basicDetails.monthlyRent"] = {};
