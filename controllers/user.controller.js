@@ -4,7 +4,10 @@ const jwt = require("jsonwebtoken");
 const UserModel = require("../model/user.model");
 const nodemailer = require("nodemailer");
 const Blacklist = require("../model/blackList.model");
-const sendEmail = require("../services/sendEmail")
+const sendEmail = require("../services/sendEmail");
+const PropertyModel = require("../model/properties.model");
+const SellPropertyModel = require("../model/sale.model");
+
 
 
 const registerUser = async (req, res) => {
@@ -536,6 +539,45 @@ module.exports = bookSite;
 
 
 
+// booking history api 
+const bookingHistory = async (req, res) => {
+  try {
+    const user = req.user; 
+
+    const bookingIds = user.booking_history || [];
+
+    // Rent 
+    const rentBookings = await PropertyModel.find({ _id: { $in: bookingIds } });
+
+    // Sale 
+    const saleBookings = await SellPropertyModel.find({ _id: { $in: bookingIds } });
+
+    const rentData = rentBookings.map(p => ({ ...p._doc, type: "rent" }));
+    const saleData = saleBookings.map(p => ({ ...p._doc, type: "sale" }));
+
+    const combinedBookings = [...rentData, ...saleData];
+
+    res.status(200).json({
+      success: true,
+      message: "Booking history fetched successfully",
+      count: combinedBookings.length,
+      bookings: combinedBookings,
+    });
+
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+
+
+
+
+
 
 
 module.exports = {
@@ -549,6 +591,7 @@ module.exports = {
   resetPassword,
   logoutUser,
   subscribeNewsletter,
-  bookSite
+  bookSite,
+  bookingHistory
 
 };

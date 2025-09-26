@@ -5,7 +5,7 @@ const authController = require('../controllers/user.controller');
 const authMiddleware = require('../middleware/auth.middleware');
 
 
-
+router.get('/booking', authMiddleware, authController.bookingHistory);
 router.post('/register', authController.registerUser);
 router.post('/login', authController.loginUser);
 router.post('/logout', authMiddleware, authController.logoutUser);
