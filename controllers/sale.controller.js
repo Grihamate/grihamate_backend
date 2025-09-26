@@ -444,7 +444,7 @@ const getAllSaleProperties = async (req, res) => {
       bhkType,
       amenities,
       propertyStatus,
-      facing,
+      propertyFacing,
       ageOfProperty
     } = req.query;
 
@@ -483,8 +483,8 @@ const getAllSaleProperties = async (req, res) => {
 }
 
     // Facing
-     if (facing) {
-      query["basicDetails.propertyFacing"] = facing;
+     if (propertyFacing) {
+      query["basicDetails.propertyFacing"] = propertyFacing;
     }
 
     // Age of Property
