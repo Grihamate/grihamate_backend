@@ -385,7 +385,7 @@ const subscribeNewsletter = async (req, res) => {
 
 
 
-// checking on render
+
 
 // const bookSite = async (req, res) => {
 
@@ -469,7 +469,7 @@ const subscribeNewsletter = async (req, res) => {
 
 
 
-
+/////////////////////////////////////////////////////////////////////////////////////
 const bookSite = async (req, res) => {
   try {
     const COMPANY_EMAIL = process.env.GMAIL_COMPANY;
@@ -535,7 +535,8 @@ const bookSite = async (req, res) => {
   }
 };
 
-module.exports = bookSite;
+
+
 
 
 
