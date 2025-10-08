@@ -14,7 +14,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors({
   origin: [
      "http://13.234.106.119",
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "https://grihamate.com/",
+    "https://grihamate.com"
    
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
